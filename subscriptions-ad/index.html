@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="utf-8">
+<style>
+@font-face{font-family:Plex;src:url(assets/fonts/IBMPlexSansArabic-Bold.ttf);font-weight:700}
+@font-face{font-family:Plex;src:url(assets/fonts/IBMPlexSansArabic-SemiBold.ttf);font-weight:600}
+@font-face{font-family:Amiri;src:url(assets/fonts/Amiri-BoldItalic.ttf);font-weight:700;font-style:italic}
+@font-face{font-family:Amiri;src:url(assets/fonts/Amiri-Bold.ttf);font-weight:700;font-style:normal}
+@font-face{font-family:Inter;src:url(assets/fonts/Inter.ttf);font-weight:100 900}
+@font-face{font-family:Playfair;src:url(assets/fonts/PlayfairDisplay-Italic.ttf);font-weight:400 900;font-style:italic}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#d6d6d6}
+#root{position:absolute;inset:0;overflow:hidden;background:radial-gradient(ellipse 80% 62% at 50% 42%,#f8f8f8 0%,#e7e7e7 55%,#c3c3c3 100%)}
+#cam{position:absolute;inset:0;transform-origin:50% 45%}
+.sc{position:absolute;inset:0;transform-origin:50% 45%}
+.a{position:absolute}
+.row{position:absolute;left:0;right:0;text-align:center;translate:0 -50%;direction:rtl;white-space:nowrap;line-height:1.25}
+.w{display:inline-block;transform-origin:50% 70%}
+.sans{font-family:Plex;font-weight:700;color:#151515;letter-spacing:-.01em}
+.serif{font-family:Amiri;font-style:italic;font-weight:700;color:#3b3b3b}
+.lat{font-family:Inter;font-weight:800;color:#151515;letter-spacing:-.02em;direction:ltr}
+.latI{font-family:Playfair;font-style:italic;font-weight:700;color:#2b2b2b;direction:ltr}
+.ca{text-shadow:1.6px 0 rgba(255,0,40,.2),-1.6px 0 rgba(0,170,255,.2),0 12px 26px rgba(0,0,0,.16)}
+.hl{display:inline-block;background:#121212;color:#fff;padding:.02em .32em .1em;border-radius:8px;box-shadow:0 16px 34px rgba(0,0,0,.28)}
+.hl .w{color:#fff}
+.logo img{width:100%;height:100%;display:block;filter:drop-shadow(0 38px 34px rgba(0,0,0,.30)) drop-shadow(0 8px 10px rgba(0,0,0,.16))}
+.sel{position:absolute;border:3px dashed #1a1a1a}
+.sel>i{position:absolute;width:24px;height:24px;border-radius:50%;background:#1a1a1a;box-shadow:0 4px 8px rgba(0,0,0,.25)}
+.pol{position:absolute;transform-origin:50% 0}
+.pol .card{position:absolute;inset:0;background:linear-gradient(170deg,#fff,#eeeeee);border-radius:6px;padding:20px 20px 0;box-shadow:0 34px 50px rgba(0,0,0,.28),0 6px 10px rgba(0,0,0,.12)}
+.pol .ph{width:100%;border-radius:3px;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 40% 30%,#4a4a4a,#151515 75%);box-shadow:inset 0 0 40px rgba(0,0,0,.6)}
+.pol .lb{font-family:Amiri;font-style:italic;font-weight:700;color:#222;text-align:center;direction:rtl}
+#cap{position:absolute;left:40px;right:40px;top:1575px;height:0}
+.cl{position:absolute;left:0;right:0;top:0;translate:0 -50%;text-align:center;direction:rtl;font-family:Plex;font-weight:700;font-size:56px;line-height:1.5;color:#151515;
+  text-shadow:0 0 18px rgba(255,255,255,.9),0 0 4px rgba(255,255,255,.9)}
+.cw{display:inline-block;padding:0 .18em .04em;border-radius:12px;opacity:.32}
+.cw.past{opacity:1}
+.cw.on{opacity:1;background:#111;color:#fff;text-shadow:none;box-shadow:0 12px 26px rgba(0,0,0,.28)}
+.cw.lt{font-family:Inter;font-weight:800;direction:ltr;unicode-bidi:isolate;letter-spacing:-.01em}
+#cap.dark .cl{color:#fff;text-shadow:0 0 18px rgba(0,0,0,.9)}
+#cap.dark .cw.on{background:#fff;color:#111}
+#vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 85% 72% at 50% 45%,transparent 52%,rgba(0,0,0,.30) 100%)}
+#grain{position:absolute;inset:0;pointer-events:none;opacity:.16;mix-blend-mode:overlay;background-size:1080px 1920px;image-rendering:pixelated}
+#fade{position:absolute;inset:0;background:#e9e9e9;pointer-events:none;opacity:0}
+</style>
+</head>
+<body>
+<div id="root"><div id="cam"></div><div id="cap"></div><div id="vig"></div><div id="grain"></div><div id="fade"></div></div>
+<script>
+// ===================== engine =====================
+const OFFSET = 0.35;          // seconds of picture before the VO starts
+const FPS = 30;
+const VO_END = 51.0;
+const DURATION = 52.4;        // in VO time
+window.TOTAL_FRAMES = Math.round((DURATION + OFFSET) * FPS);
+window.META = {OFFSET, FPS, DURATION};
+
+const E = {
+  lin: p => p, out: p => 1 - (1 - p) ** 3, o5: p => 1 - (1 - p) ** 5, in: p => p * p * p,
+  io: p => p < .5 ? 4 * p * p * p : 1 - (-2 * p + 2) ** 3 / 2,
+  back: p => { const c = 1.9, c3 = c + 1; return 1 + c3 * (p - 1) ** 3 + c * (p - 1) ** 2; },
+};
+const vAt = (k, t) => {
+  if (t <= k[0][0]) return k[0][1];
+  for (let i = 1; i < k.length; i++) {
+    if (t < k[i][0]) { const [t0, v0] = k[i - 1], [t1, v1, e] = k[i]; return v0 + (v1 - v0) * E[e || 'out']((t - t0) / (t1 - t0)); }
+  }
+  return k[k.length - 1][1];
+};
+const ANIM = [], SCENES = [], SHAKES = [], GLITCH = [], TYPERS = [];
+window.SFX = [];
+let CUR = null;
+const sfx = (n, t, g = 1, d) => window.SFX.push({n, t: +(t + OFFSET).toFixed(3), g, d});
+const hash = n => { const x = Math.sin(n * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+
+function A(el, ch) {
+  if (!el._ch) { el._ch = {}; el._scene = CUR; ANIM.push(el); }
+  for (const k in ch) el._ch[k] = (el._ch[k] || []).concat(ch[k]).sort((a, b) => a[0] - b[0]);
+  return el;
+}
+function apply(el, t) {
+  const c = el._ch, g = (k, d) => c[k] ? vAt(c[k], t) : d;
+  const x = g('x', 0), y = g('y', 0), s = g('s', 1), r = g('r', 0), rx = g('rx', 0), ry = g('ry', 0), b = g('b', 0);
+  el.style.transform = `translate(${x}px,${y}px)` + (rx || ry ? ` perspective(1400px) rotateX(${rx}deg) rotateY(${ry}deg)` : '') + ` rotate(${r}deg) scale(${s})`;
+  el.style.opacity = g('o', 1);
+  if (c.b) el.style.filter = b > .05 ? `blur(${b}px)` : 'none';
+  if (c.cl) { const p = g('cl', 1); el.style.clipPath = p >= .999 ? 'none' : `inset(-20% -2% -20% ${(1 - p) * 102}%)`; }
+  if (c.cr) { const p = g('cr', 1); el.style.clipPath = p >= .999 ? 'none' : `inset(-20% ${(1 - p) * 102}% -20% -2%)`; }
+  if (c.cc) { const p = g('cc', 1); el.style.clipPath = p >= .999 ? 'none' : `circle(${p * 120}% at 50% 50%)`; }
+  if (c.d) el.style.strokeDashoffset = 1 - g('d', 1);
+}
+function el(parent, tag, cls, style, html) {
+  const e = document.createElement(tag); if (cls) e.className = cls; if (style) e.style.cssText = style; if (html != null) e.innerHTML = html;
+  parent.appendChild(e); return e;
+}
+const svgNS = 'http://www.w3.org/2000/svg';
+
+// --- presets ---
+const IN = (e, t, {d = .5, y = 40, x = 0, s = 1.14, b = 14, r = 0, e: ez = 'o5'} = {}) =>
+  A(e, {o: [[t, 0], [t + d * .55, 1, 'out']], y: [[t, y], [t + d, 0, ez]], x: [[t, x], [t + d, 0, ez]], s: [[t, s], [t + d, 1, ez]], b: [[t, b], [t + d * .8, 0, 'out']], r: [[t, r], [t + d, 0, ez]]});
+const OUT = (e, t, {d = .35, y = -40, x = 0, s = .9, b = 12, r = 0} = {}) => {
+  // Already faded out earlier: appending keys would interpolate it back into view.
+  const o = e._ch?.o; if (o && o[o.length - 1][1] === 0 && o[o.length - 1][0] <= t) return e;
+  return A(e, {o: [[t, 1], [t + d, 0, 'in']], y: [[t, 0], [t + d, y, 'in']], x: [[t, 0], [t + d, x, 'in']], s: [[t, 1], [t + d, s, 'in']], b: [[t, 0], [t + d, b, 'in']], r: [[t, 0], [t + d, r, 'in']]});
+};
+
+// Scene root: in/out transitions and visibility window.
+function SC(t0, t1, {inFx = 'zoom', out = 'zoom', outT} = {}) {
+  const root = el(document.getElementById('cam'), 'div', 'sc');
+  CUR = root; root._t = [t0, t1]; SCENES.push(root);
+  if (inFx === 'zoom') A(root, {o: [[t0, 0], [t0 + .22, 1, 'out']], s: [[t0, 1.08], [t0 + .55, 1, 'o5']], b: [[t0, 10], [t0 + .35, 0]]});
+  outT = outT ?? t1 - .3;
+  const d = t1 - outT;
+  if (out === 'zoom') A(root, {o: [[outT, 1], [t1, 0, 'in']], s: [[outT, 1], [t1, 1.22, 'in']], b: [[outT, 0], [t1, 14, 'in']]});
+  if (out === 'whipL') A(root, {x: [[outT, 0], [t1, -1100, 'in']], b: [[outT, 0], [t1, 26, 'in']]});
+  if (out === 'whipU') A(root, {y: [[outT, 0], [t1, -1500, 'in']], b: [[outT, 0], [t1, 26, 'in']]});
+  if (out === 'fall') A(root, {o: [[outT, 1], [t1, 0, 'in']], s: [[outT, 1], [t1, .86, 'in']], b: [[outT, 0], [t1, 10, 'in']]});
+  if (out !== 'none' && out !== 'circle') sfx(out.startsWith('whip') ? 'swish' : 'whoosh', outT - .05, .8);
+  return root;
+}
+const shake = (t, amp) => SHAKES.push([t, amp]);
+
+// --- typography ---
+// W: a row of words, each revealed at its own (VO-synced) time.
+function W(sc, y, list, cls, style = '', opt = {}) {
+  const r = el(sc, 'div', 'row ' + cls, `top:${y}px;${style}`);
+  list.forEach(([txt, t, extra], i) => {
+    if (i) r.appendChild(document.createTextNode(' '));
+    const w = el(r, 'span', 'w ' + (extra || ''), '', txt);
+    IN(w, t - .06, {y: opt.y ?? 46, s: opt.s ?? 1.18, b: opt.b ?? 16, d: opt.d ?? .5});
+  });
+  if (opt.sfx !== false) sfx(opt.sfx || 'swish', list[0][1] - .08, opt.g ?? .45);
+  return r;
+}
+// HL: words inside a black highlight bar that wipes in right-to-left.
+function HL(sc, y, list, style = '', opt = {}) {
+  const r = el(sc, 'div', 'row sans', `top:${y}px;${style}`);
+  const bar = el(r, 'span', 'hl ca', '');
+  A(bar, {cl: [[list[0][1] - .14, 0], [list[0][1] + .2, 1, 'o5']], o: [[list[0][1] - .15, 0], [list[0][1] - .14, 1, 'lin']]});
+  list.forEach(([txt, t], i) => {
+    if (i) bar.appendChild(document.createTextNode(' '));
+    IN(el(bar, 'span', 'w', '', txt), t - .04, {y: 26, s: 1.1, b: 10, d: .4});
+  });
+  sfx('swish', list[0][1] - .14, opt.g ?? .5);
+  return r;
+}
+// L: Latin text, letter by letter.
+function L(sc, y, txt, t, cls, style = '', st = .035, x) {
+  const r = el(sc, 'div', 'row ' + cls, `top:${y}px;direction:ltr;${x != null ? `left:${x}px;right:auto;translate:-50% -50%;` : ''}${style}`);
+  [...txt].forEach((ch, i) => { const w = el(r, 'span', 'w', '', ch === ' ' ? '&nbsp;' : ch); IN(w, t + i * st, {y: 30, s: 1.35, b: 10, d: .4}); });
+  return r;
+}
+function ribbon(sc, d, w, color, t, dur = .9, op = 1) {
+  const s = document.createElementNS(svgNS, 'svg');
+  s.setAttribute('width', 1080); s.setAttribute('height', 1920); s.setAttribute('class', 'a'); s.style.cssText = 'left:0;top:0;overflow:visible;filter:drop-shadow(0 18px 20px rgba(0,0,0,.25))';
+  s.innerHTML = `<path d="${d}" pathLength="1" fill="none" stroke="${color}" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="1 1" opacity="${op}"/>`;
+  sc.appendChild(s);
+  A(s.firstChild, {d: [[t, 0], [t + dur, 1, 'io']]});
+  return s;
+}
+function dashed(sc, d, t, dur = .6, color = '#2a2a2a') {
+  const s = document.createElementNS(svgNS, 'svg');
+  s.setAttribute('width', 1080); s.setAttribute('height', 1920); s.setAttribute('class', 'a'); s.style.cssText = 'left:0;top:0';
+  s.innerHTML = `<path d="${d}" fill="none" stroke="${color}" stroke-width="4" stroke-dasharray="14 12" opacity=".75"/>`;
+  sc.appendChild(s); A(s, {cr: [[t, 0], [t + dur, 1, 'io']]});
+  return s;
+}
+const STAR = 'M0,-100 C8,-14 14,-8 100,0 C14,8 8,14 0,100 C-8,14 -14,8 -100,0 C-14,-8 -8,-14 0,-100Z';
+function star(sc, x, y, size, t, {fx = 0, fy = 0, rot = 120, color = '#151515', spin = 25} = {}) {
+  const s = el(sc, 'div', 'a', `left:${x - size / 2}px;top:${y - size / 2}px;width:${size}px;height:${size}px`,
+    `<svg viewBox="-100 -100 200 200" width="${size}" height="${size}" style="filter:drop-shadow(0 20px 18px rgba(0,0,0,.3))"><path d="${STAR}" fill="${color}"/></svg>`);
+  A(s, {x: [[t, fx], [t + .7, 0, 'o5']], y: [[t, fy], [t + .7, 0, 'o5']], r: [[t, rot], [t + .7, 0, 'o5'], [t + 6, -spin, 'lin']], o: [[t, 0], [t + .15, 1, 'lin']]});
+  return s;
+}
+function barcode(sc, x, y, t, w = 150, h = 48, seed = 3) {
+  let bars = '', cx = 0, i = 0;
+  while (cx < w) { const bw = 1 + Math.floor(hash(seed * 31 + i) * 4); if (i % 2 === 0) bars += `<rect x="${cx}" y="0" width="${bw}" height="${h}" fill="#1a1a1a"/>`; cx += bw + 1; i++; }
+  const b = el(sc, 'div', 'a', `left:${x - w / 2}px;top:${y - h / 2}px`, `<svg width="${w}" height="${h}">${bars}</svg>`);
+  A(b, {cl: [[t, 0], [t + .45, 1, 'io']]});
+  return b;
+}
+function selBox(sc, cx, cy, w, h, t, color = '#1a1a1a') {
+  const b = el(sc, 'div', 'sel', `left:${cx - w / 2}px;top:${cy - h / 2}px;width:${w}px;height:${h}px;border-color:${color}`);
+  [[-13, -13], [w - 11, -13], [-13, h - 11], [w - 11, h - 11]].forEach(([x, y], i) => {
+    const d = el(b, 'i', '', `left:${x - 3}px;top:${y - 3}px;background:${color}`);
+    A(d, {s: [[t + .08 + i * .04, 0], [t + .3 + i * .04, 1, 'back']]});
+  });
+  A(b, {o: [[t, 0], [t + .12, 1, 'lin']], s: [[t, .72], [t + .4, 1, 'back']]});
+  sfx('click', t, .7);
+  return b;
+}
+function logo(sc, name, cx, cy, size, t, mode = 'drop', opt = {}) {
+  const w = el(sc, 'div', 'a logo', `left:${cx - size / 2}px;top:${cy - size / 2}px;width:${size}px;height:${size}px`, `<img src="assets/logos/${name}.png">`);
+  if (mode === 'drop') { A(w, {o: [[t, 0], [t + .1, 1, 'lin']], s: [[t, 1.7], [t + .5, 1, 'back']], b: [[t, 16], [t + .3, 0]], r: [[t, opt.r ?? 10], [t + .5, 0, 'back']]}); sfx('pop', t + .12, .8); sfx('impact', t + .14, .35); }
+  if (mode === 'flip') { A(w, {o: [[t, 0], [t + .12, 1, 'lin']], ry: [[t, opt.ry ?? 95], [t + .65, 0, 'back']], s: [[t, .8], [t + .65, 1, 'back']], b: [[t, 8], [t + .3, 0]]}); sfx('whoosh', t - .05, .55); sfx('pop', t + .3, .6); }
+  if (mode === 'slide') { A(w, {o: [[t, 0], [t + .1, 1, 'lin']], x: [[t, opt.x ?? -600], [t + .55, 0, 'o5']], r: [[t, opt.r ?? -25], [t + .7, 0, 'back']], b: [[t, 22], [t + .35, 0]]}); sfx('swish', t - .03, .7); sfx('impact', t + .4, .3); }
+  if (mode === 'slam') { A(w, {o: [[t, 0], [t + .06, 1, 'lin']], s: [[t, 2.6], [t + .38, 1, 'o5']], b: [[t, 24], [t + .3, 0]]}); sfx('impact', t + .3, 1); sfx('boom', t + .3, .6); shake(t + .32, 16); }
+  if (mode === 'pop') { A(w, {o: [[t, 0], [t + .08, 1, 'lin']], s: [[t, .2], [t + .45, 1, 'back']], y: [[t, 50], [t + .45, 0, 'o5']]}); sfx('pop', t + .05, .55); }
+  if (opt.float) A(w, {y: Array.from({length: 14}, (_, i) => [t + .6 + i * .5, (i % 2 ? -1 : 1) * opt.float, 'io'])});
+  return w;
+}
+const ICONS = {
+  clapper: '<rect x="4" y="12" width="24" height="15" rx="2"/><path d="M4 12l1.5-6.5 22 0L26 12M11 5.5L9 12M17 5.5L15 12M23 5.5L21 12"/>',
+  tv: '<rect x="3" y="8" width="26" height="17" rx="2.5"/><path d="M11 29h10M11 3l5 5 5-5"/><path d="M14 13l6 3.5-6 3.5z" fill="currentColor"/>',
+  popcorn: '<path d="M8 14l3 15h10l3-15z"/><path d="M13.5 14l1 15M18.5 14l-1 15"/><circle cx="10.5" cy="11" r="3.2"/><circle cx="16" cy="8.5" r="3.8"/><circle cx="21.5" cy="11" r="3.2"/>',
+  cap: '<path d="M2 12l14-6 14 6-14 6z"/><path d="M8 15v6c0 2.2 3.6 4 8 4s8-1.8 8-4v-6M28 13v8"/>',
+  camera: '<rect x="3" y="9" width="18" height="14" rx="2.5"/><path d="M21 14l8-4v12l-8-4z"/><circle cx="9" cy="16" r="2.4" fill="currentColor"/>',
+  brief: '<rect x="4" y="10" width="24" height="16" rx="3"/><path d="M12 10V6h8v4M4 17h24"/>',
+  sofa: '<path d="M6 14v-3a3 3 0 0 1 3-3h14a3 3 0 0 1 3 3v3"/><path d="M4 14a2 2 0 0 1 4 0v3h16v-3a2 2 0 0 1 4 0v8H4z"/><path d="M7 22v3M25 22v3"/>',
+  bulb: '<path d="M12 23h8M13 27h6M16 4a8 8 0 0 0-5 14.2c1 1 1.5 2.3 1.5 4.3h7c0-2 .5-3.3 1.5-4.3A8 8 0 0 0 16 4z"/>',
+  rocket: '<path d="M16 3c5 3 7 8.5 6 15l-3 4h-6l-3-4c-1-6.5 1-12 6-15z"/><circle cx="16" cy="12" r="2.5"/><path d="M10 17l-4 4.5 1 4 4-3M22 17l4 4.5-1 4-4-3M14 26l2 4 2-4"/>',
+  check: '<path d="M6 16.5l6.5 6.5L26 9"/>',
+  send: '<path d="M4 15L28 4 21 28l-5-10zM16 18L28 4"/>',
+  play: '<path d="M11 7l15 9-15 9z" fill="currentColor"/>',
+};
+const icon = (k, s, col = '#fff', sw = 2.2) => `<svg viewBox="0 0 32 32" width="${s}" height="${s}" fill="none" stroke="${col}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" style="color:${col}">${ICONS[k]}</svg>`;
+function polaroid(sc, cx, top, w, h, ic, label, t, {fromY = -700, swing = 14} = {}) {
+  const p = el(sc, 'div', 'pol', `left:${cx - w / 2}px;top:${top}px;width:${w}px;height:${h}px`);
+  const ph = w - 40;
+  el(p, 'div', 'card', '', `<div class="ph" style="height:${ph}px">${icon(ic, ph * .46, '#f2f2f2', 1.8)}</div><div class="lb" style="font-size:${w * .13}px;margin-top:${(h - ph - 20) * .14}px">${label}</div>`);
+  el(p, 'div', 'a', `left:${w / 2 - 14}px;top:-46px`, `<svg width="28" height="74" viewBox="0 0 28 74"><path d="M8 70V12a6 6 0 0 1 12 0v50a3 3 0 0 1-6 0V18" fill="none" stroke="#777" stroke-width="3.5" stroke-linecap="round"/></svg>`);
+  A(p, {y: [[t, fromY], [t + .55, 0, 'back']], o: [[t, 0], [t + .1, 1, 'lin']],
+    r: [[t, swing], [t + .55, -swing * .7, 'io'], [t + .95, swing * .4, 'io'], [t + 1.35, -swing * .18, 'io'], [t + 1.8, 0, 'io']]});
+  sfx('swish', t - .02, .5); sfx('pop', t + .42, .45);
+  return p;
+}
+function typer(e, t0, t1) { e._full = e.textContent; e.textContent = ''; TYPERS.push([e, t0, t1]); sfx('type', t0, .5, t1 - t0); }
+
+// ===================== captions =====================
+const CAPS = [
+  [0.00, [['اليوم', 0], ['كامل', .78], ['الأدوات', 1.32], ['اللي', 1.8], ['تحتاجها', 1.92]]],
+  [2.62, [['تلقاهم', 2.62], ['في', 3.14], ['بلاصة', 3.36], ['وحدة!', 3.72]]],
+  [4.48, [['CapCut', 4.48, 1], ['Pro،', 5.0, 1], ['ChatGPT،', 5.8, 1], ['Gemini', 6.96, 1], ['وحتى', 7.56], ['Netflix', 8.16, 1]]],
+  [9.26, [['تحب', 9.26], ['تصمّم', 9.62], ['وتمنتج', 10.24], ['فيديوهات', 10.82], ['احترافية؟', 11.32]]],
+  [12.4, [['عندك', 12.4], ['CapCut', 12.8, 1], ['وأدوات', 13.36], ['Adobe', 13.88, 1]]],
+  [14.84, [['تحب', 14.84], ['الذكاء', 15.32], ['الاصطناعي', 15.76], ['يعاونك', 16.4]]],
+  [16.8, [['في', 16.8], ['خدمتك،', 16.9], ['أفكارك', 17.72], ['ومشاريعك؟', 18.36]]],
+  [19.48, [['عندك', 19.48], ['ChatGPT', 19.82, 1], ['و', 20.68], ['Gemini', 20.82, 1]]],
+  [21.74, [['وحاب', 21.74], ['تستمتع', 22.28], ['بأفلامك', 22.9], ['ومسلسلاتك', 23.74], ['المفضلة؟', 24.48]]],
+  [25.44, [['حتى', 25.44], ['Netflix', 25.64, 1], ['راهي', 26.18], ['متوفرة!', 26.4]]],
+  [27.18, [['والأحلى', 27.18], ['من', 28.04], ['هذا', 28.2], ['كامل؟', 28.48]]],
+  [29.2, [['ما', 29.2], ['تحتاجش', 29.34], ['بطاقة', 29.86], ['بنكية', 30.36]]],
+  [31.08, [['ولا', 31.08], ['الدفع', 31.5], ['بالعملة', 31.9], ['الصعبة!', 32.24]]],
+  [32.96, [['خلّص', 32.96], ['بالدينار', 33.54], ['الجزائري', 34.04], ['DA', 34.76, 1]]],
+  [35.96, [['وبطريقة', 35.96], ['سهلة', 36.42], ['ومريحة', 37.04]]],
+  [38.42, [['سواء', 38.42], ['كنت', 38.76], ['طالب،', 38.98], ['صانع', 39.82], ['محتوى،', 40.12]]],
+  [41.06, [['صاحب', 41.06], ['مشروع', 41.3]]],
+  [41.96, [['أو', 41.96], ['تحب', 42.18], ['غير', 42.6], ['تستمتع', 42.92], ['بوقتك…', 43.36]]],
+  [43.98, [['راح', 43.98], ['تلقى', 44.36], ['واش', 44.76], ['تحتاج', 44.9]]],
+  [45.8, [['ما', 45.8], ['تضيعش', 46.14], ['وقتك،', 46.58]]],
+  [47.12, [['ابعثلنا', 47.12], ['رسالة', 47.76], ['الآن', 48.16]]],
+  [48.8, [['واكتشف', 48.8], ['الاشتراك', 49.32], ['اللي', 49.96], ['يناسبك!', 50.16]]],
+];
+const CAP_END = 51.3;
+const capRoot = document.getElementById('cap');
+const capLines = CAPS.map(([t0, ws], i) => {
+  const line = el(capRoot, 'div', 'cl', 'opacity:0');
+  const spans = ws.map(([w, t, lt], j) => { if (j) line.appendChild(document.createTextNode(' ')); return [el(line, 'span', 'cw' + (lt ? ' lt' : ''), '', w), t]; });
+  return {line, spans, t0, t1: i + 1 < CAPS.length ? CAPS[i + 1][0] : CAP_END};
+});
+function captions(t) {
+  capRoot.classList.toggle('dark', t > 15.0 && t < 19.35);
+  for (const c of capLines) {
+    const on = t >= c.t0 - .08 && t < c.t1 - .02;
+    if (!on) { c.line.style.opacity = 0; continue; }
+    const p = Math.min(1, (t - c.t0 + .08) / .22);
+    c.line.style.opacity = E.out(p);
+    c.line.style.transform = `translateY(${(1 - E.out(p)) * 24}px)`;
+    c.spans.forEach(([s, ts], j) => {
+      const next = j + 1 < c.spans.length ? c.spans[j + 1][1] : c.t1;
+      s.classList.toggle('on', t >= ts - .03 && t < next - .03);
+      s.classList.toggle('past', t >= next - .03);
+    });
+  }
+}
+
+// ===================== scenes =====================
+let s, x;
+
+// S1 — hook: "everything you need in one place"
+s = SC(-0.35, 4.62, {inFx: 'none', out: 'none'});
+ribbon(s, 'M-140 250 C 40 150, 220 40, 460 -80', 54, '#161616', -.3, .8);
+ribbon(s, 'M-120 1520 C 300 1720, 820 1330, 1220 1560', 26, '#a5a5a5', .1, 1.1);
+star(s, 1010, 120, 230, -.2, {fx: 300, fy: -200});
+star(s, 70, 1700, 200, .1, {fx: -260, fy: 200, rot: -140});
+barcode(s, 540, 175, -.25);
+L(s, 250, 'ALL YOUR DIGITAL TOOLS', -.2, 'lat', 'font-size:25px;letter-spacing:.38em;color:#5f5f5f;font-weight:600', .018);
+W(s, 330, [['اليوم', 0]], 'serif ca', 'font-size:92px', {sfx: 'whoosh', g: .5});
+W(s, 510, [['كامل', .78], ['الأدوات', 1.32]], 'sans ca', 'font-size:152px');
+HL(s, 680, [['اللي', 1.8], ['تحتاجها', 1.92]], 'font-size:92px');
+const disc = el(s, 'div', 'a', 'left:300px;top:790px;width:480px;height:480px');
+el(disc, 'div', 'a', 'inset:0;border-radius:50%;background:radial-gradient(circle at 38% 30%,#3a3a3a,#0d0d0d 70%);box-shadow:0 50px 80px rgba(0,0,0,.4),inset 0 -20px 50px rgba(0,0,0,.6)');
+const ring = el(disc, 'div', 'a', 'left:-46px;top:-46px;width:572px;height:572px',
+  '<svg width="572" height="572"><circle cx="286" cy="286" r="280" fill="none" stroke="#1d1d1d" stroke-width="5" stroke-dasharray="3 16" stroke-linecap="round"/></svg>');
+A(ring, {r: [[-.35, 0], [4.62, 70, 'lin']]});
+IN(disc, .35, {d: .7, s: .55, y: 120, b: 18, e: 'back'}); sfx('whoosh', .3, .5);
+[['capcut', 1], ['chatgpt', 0], ['gemini', 3], ['netflix', 2]].forEach(([n, q], i) => {
+  const cx = 240 + (q % 2 ? 1 : -1) * 92, cy = 240 + (q > 1 ? 1 : -1) * 92;
+  const slot = el(disc, 'div', 'a', `left:${cx - 75}px;top:${cy - 75}px;width:150px;height:150px;border:3px dashed rgba(255,255,255,.35);border-radius:34px`);
+  IN(slot, .8 + i * .07, {s: .5, y: 0, b: 6, d: .4, e: 'back'});
+  logo(disc, n, cx, cy, 170, 2.62 + i * .13, 'pop');
+});
+const box1 = selBox(s, 540, 1375, 600, 140, 3.1);
+W(s, 1373, [['في', 3.14], ['بلاصة', 3.36], ['وحدة!', 3.72, 'serif']], 'sans ca', 'font-size:78px', {sfx: false});
+sfx('impact', 3.74, .8); shake(3.76, 9);
+// exit: the disc rushes toward camera and opens into the logo grid
+A(disc, {s: [[4.2, 1], [4.6, 5, 'in']], o: [[4.38, 1], [4.6, 0, 'in']], b: [[4.25, 0], [4.6, 18, 'in']]});
+s.querySelectorAll(':scope > .row, :scope > .sel').forEach(r => OUT(r, 4.2, {d: .3}));
+sfx('whoosh', 4.18, .9);
+
+// S2 — the four tools
+s = SC(4.35, 9.42, {out: 'none'});
+star(s, 990, 170, 210, 4.4, {fx: 320, fy: -260});
+star(s, 80, 1660, 260, 4.5, {fx: -300, fy: 300, rot: -150});
+ribbon(s, 'M-120 260 C 300 520, 760 120, 1220 380', 22, '#9d9d9d', 4.4, 1.2, .9);
+L(s, 245, 'ALL-IN-ONE', 4.45, 'lat', 'font-size:30px;letter-spacing:.42em;color:#555;font-weight:600', .03);
+const G = [['capcut', 760, 600, 4.48], ['chatgpt', 320, 600, 5.8], ['gemini', 760, 1080, 6.96], ['netflix', 320, 1080, 8.16]];
+const tiles = G.map(([n, x, y, t], i) => logo(s, n, x, y, 400, t, 'drop', {r: i % 2 ? -10 : 10}));
+const pro = el(s, 'div', 'a', 'left:870px;top:395px', '<span class="hl latI" style="font-size:54px;color:#fff">Pro</span>');
+A(pro, {cr: [[4.9, 0], [5.2, 1, 'o5']], r: [[4.9, -14], [5.3, -8, 'back']], s: [[4.9, 1.4], [5.3, 1, 'back']]});
+sfx('click', 5.0, .8);
+W(s, 845, [['وحتى…', 7.56]], 'serif ca', 'font-size:78px', {g: .4});
+const gmSpark = [[930, 900, 60], [600, 940, 40], [960, 1270, 46]].map(([x, y, z], i) => star(s, x, y, z, 7.2 + i * .07, {rot: 200, spin: 90}));
+sfx('sparkle', 7.18, .6);
+tiles.forEach((tl, i) => OUT(tl, 9.05 + i * .03, {d: .32, x: [300, -300, 300, -300][i], y: [-260, -260, 260, 260][i], s: .6, b: 16}));
+s.querySelectorAll(':scope > .row').forEach(r => OUT(r, 9.0));
+OUT(pro, 9.0);
+sfx('whoosh', 9.0, .9);
+
+// S3 — design & edit videos -> CapCut + Adobe
+s = SC(9.15, 14.95, {out: 'none'});
+ribbon(s, 'M1220 300 C 820 40, 300 200, -120 60', 40, '#171717', 9.2, .9);
+star(s, 70, 1500, 190, 9.3, {fx: -260, fy: 120, rot: -160});
+W(s, 290, [['تحب', 9.26], ['تصمّم', 9.62]], 'sans ca', 'font-size:130px');
+W(s, 440, [['وتمنتج', 10.24]], 'serif ca', 'font-size:112px', {g: .35});
+HL(s, 595, [['فيديوهات', 10.82], ['احترافية؟', 11.32]], 'font-size:84px');
+const ed = el(s, 'div', 'a', 'left:90px;top:760px;width:900px;height:560px;border-radius:30px;background:linear-gradient(165deg,#ffffff,#e9e9e9);box-shadow:0 50px 80px rgba(0,0,0,.25),0 8px 16px rgba(0,0,0,.12);overflow:hidden');
+const pv = el(ed, 'div', 'a', 'left:24px;top:24px;width:852px;height:290px;border-radius:18px;overflow:hidden;background:radial-gradient(ellipse at 60% 40%,#5a5a5a,#111 75%)',
+  `<div class="a" style="left:360px;top:60px;width:140px;height:140px;border-radius:50%;background:linear-gradient(160deg,#cfcfcf,#6b6b6b)"></div>
+   <div class="a" style="left:300px;top:190px;width:260px;height:180px;border-radius:130px 130px 0 0;background:linear-gradient(160deg,#9a9a9a,#3a3a3a)"></div>
+   <div class="a" style="left:30px;top:24px;font-family:Inter;font-weight:700;font-size:20px;color:#e0e0e0;letter-spacing:.2em">● REC 4K</div>`);
+const playI = el(pv, 'div', 'a', 'left:386px;top:105px', icon('play', 80, '#ffffff'));
+const trk = [[0, 30, '#1b1b1b'], [32, 30, '#3d3d3d'], [64, 34, '#1b1b1b'], [6, 40, '#8a8a8a', 1], [50, 38, '#5a5a5a', 1]];
+trk.forEach(([l, w, c, row], i) => {
+  const cdiv = el(ed, 'div', 'a', `left:${24 + l * 8.52}px;top:${row ? 405 : 345}px;width:${w * 8.52 - 6}px;height:50px;border-radius:10px;background:${c};box-shadow:inset 0 0 0 2px rgba(255,255,255,.15)`);
+  A(cdiv, {cr: [[10.3 + i * .12, 0], [10.6 + i * .12, 1, 'o5']]}); sfx('click', 10.3 + i * .12, .35);
+});
+el(ed, 'div', 'a', 'left:24px;top:470px;width:852px;height:60px;display:flex;gap:3px;align-items:center',
+  Array.from({length: 140}, (_, i) => `<div style="flex:1;height:${18 + hash(i * 7) * 82}%;background:#9b9b9b;border-radius:2px"></div>`).join(''));
+const head = el(ed, 'div', 'a', 'left:24px;top:330px;width:4px;height:210px;background:#111;box-shadow:0 0 0 2px #fff');
+A(head, {x: [[10.8, 0], [12.4, 852, 'lin']]});
+IN(ed, 9.7, {d: .7, y: 160, s: .9, b: 16}); A(ed, {rx: [[9.7, 30], [10.4, 0, 'o5']]}); sfx('whoosh', 9.65, .6);
+OUT(ed, 12.3, {d: .35, y: 60, s: .82});
+W(s, 770, [['عندك', 12.4]], 'serif ca', 'font-size:84px', {g: .35});
+logo(s, 'capcut', 320, 1070, 400, 12.8, 'slide', {x: -620, r: -28});
+const plus = el(s, 'div', 'a', 'left:500px;top:1030px;width:80px;height:80px;border-radius:50%;background:#151515;color:#fff;font:700 60px/76px Inter;text-align:center;box-shadow:0 14px 24px rgba(0,0,0,.3)', '+');
+A(plus, {s: [[13.36, 0], [13.7, 1, 'back']], r: [[13.36, -90], [13.7, 0, 'back']]}); sfx('pop', 13.4, .5);
+logo(s, 'adobe', 760, 1070, 400, 13.88, 'slide', {x: 620, r: 28});
+
+// S4 — dark: AI that helps you
+s = SC(14.68, 19.56, {inFx: 'none', out: 'none'});
+s.style.zIndex = 5;
+A(s, {cc: [[14.68, 0], [15.08, 1, 'io'], [19.22, 1], [19.56, 0, 'in']]});
+sfx('boom', 14.7, .7); sfx('whoosh', 14.66, .8); sfx('whoosh', 19.2, .8);
+el(s, 'div', 'a', 'inset:0;background:radial-gradient(ellipse 80% 60% at 50% 40%,#2b2b2b,#0c0c0c 75%)');
+el(s, 'div', 'a', 'inset:0;opacity:.07;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:72px 72px');
+ribbon(s, 'M-120 1450 C 260 1250, 800 1550, 1220 1300', 34, '#e8e8e8', 15.0, 1.1, .85);
+star(s, 1000, 200, 200, 15.0, {fx: 300, fy: -200, color: '#ededed'});
+W(s, 360, [['تحب', 14.84]], 'serif', 'font-size:86px;color:#bdbdbd', {g: .3});
+const ai = W(s, 525, [['الذكاء', 15.32], ['الاصطناعي', 15.76]], 'sans', 'font-size:134px;color:#fff', {sfx: 'glitch', g: .6});
+GLITCH.push([ai, 15.26, 15.62], [ai, 15.7, 16.1]); sfx('glitch', 15.72, .5);
+W(s, 690, [['يعاونك', 16.4]], 'serif', 'font-size:98px;color:#e2e2e2', {g: .35});
+[['brief', 'في خدمتك', 16.82, 900], ['bulb', 'أفكارك', 17.72, 1075], ['rocket', 'ومشاريعك؟', 18.36, 1250]].forEach(([ic, txt, t, y]) => {
+  const b = selBox(s, 540, y, 640, 136, t - .04, '#f0f0f0');
+  const r = el(s, 'div', 'row sans', `top:${y}px;font-size:66px;color:#fff;display:flex;justify-content:center;align-items:center;gap:28px`, `${icon(ic, 66, '#fff', 2)}<span>${txt}</span>`);
+  IN(r, t, {x: 60, s: 1.05, y: 0, b: 12, d: .45});
+});
+
+// S4b — ChatGPT & Gemini
+s = SC(19.25, 21.95, {inFx: 'none', out: 'whipU', outT: 21.62});
+ribbon(s, 'M-120 330 C 300 600, 780 160, 1220 420', 30, '#1a1a1a', 19.4, 1);
+star(s, 90, 1580, 220, 19.5, {fx: -300, fy: 200, rot: -160});
+W(s, 520, [['عندك', 19.48]], 'serif ca', 'font-size:104px', {g: .35});
+logo(s, 'chatgpt', 300, 950, 430, 19.82, 'flip', {ry: -95});
+const amp = L(s, 950, '&', 20.68, 'latI', 'font-size:150px;color:#222', .01, 540);
+sfx('click', 20.68, .5);
+logo(s, 'gemini', 780, 950, 430, 20.82, 'flip');
+[[960, 700, 70], [600, 760, 44], [1000, 1180, 52], [620, 1190, 36]].forEach(([x, y, z], i) => star(s, x, y, z, 21.0 + i * .06, {rot: 220, spin: 120}));
+sfx('sparkle', 20.98, .8);
+
+// S5 — movies & series -> Netflix
+s = SC(21.6, 27.3, {out: 'whipL', outT: 26.98});
+star(s, 1000, 1640, 230, 21.7, {fx: 300, fy: 260});
+W(s, 280, [['وحاب', 21.74], ['تستمتع', 22.28]], 'sans ca', 'font-size:126px');
+W(s, 425, [['بأفلامك', 22.9], ['ومسلسلاتك', 23.74]], 'serif ca', 'font-size:94px', {g: .35});
+HL(s, 565, [['المفضلة؟', 24.48]], 'font-size:84px');
+dashed(s, 'M-30 690 Q 540 790 1110 690', 22.5, .7);
+const pols = [[850, 22.9, 'clapper', 'أفلام'], [540, 23.74, 'tv', 'مسلسلات'], [230, 24.48, 'popcorn', 'سهرة']].map(([cx, t, ic, lb], i) =>
+  polaroid(s, cx, 712 + (i === 1 ? 50 : 0) - 6, 290, 360, ic, lb, t, {swing: [12, -10, 14][i]}));
+const dim = el(s, 'div', 'a', 'inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(20,0,0,.55),rgba(0,0,0,.82));opacity:0');
+A(dim, {o: [[25.4, 0], [25.75, 1, 'out']]});
+pols.forEach(p => A(p, {b: [[25.4, 0], [25.75, 7]]}));
+s.querySelectorAll(':scope > .row').forEach(r => OUT(r, 25.38, {d: .3}));
+const glow = el(s, 'div', 'a', 'left:140px;top:560px;width:800px;height:800px;border-radius:50%;background:radial-gradient(circle,rgba(229,9,20,.55),rgba(229,9,20,0) 65%)');
+A(glow, {o: [[25.8, 0], [26.0, 1, 'out'], [27.0, .7, 'io']], s: [[25.8, .4], [26.2, 1.05, 'o5'], [27, 1, 'io']]});
+logo(s, 'netflix', 540, 960, 560, 25.64, 'slam');
+const avail = HL(s, 1330, [['راهي', 26.18], ['متوفرة!', 26.4]], 'font-size:80px');
+avail.querySelector('.hl').style.cssText += ';background:#fff;color:#111';
+avail.querySelectorAll('.w').forEach(w => w.style.color = '#111');
+const chk = el(avail.querySelector('.hl'), 'span', 'w', 'margin-right:16px;vertical-align:-6px', icon('check', 64, '#e50914', 4.2));
+IN(chk, 26.5, {s: .3, y: 0, b: 0, d: .4, e: 'back'}); sfx('ding', 26.45, .7);
+
+// S6 — no bank card, no foreign currency
+s = SC(27.05, 33.1, {inFx: 'zoom', out: 'zoom', outT: 32.8});
+ribbon(s, 'M1220 1500 C 800 1250, 300 1700, -120 1400', 44, '#161616', 27.1, 1);
+star(s, 90, 220, 220, 27.15, {fx: -300, fy: -200});
+const sB = star(s, 990, 1180, 150, 27.25, {fx: 300, rot: 200, spin: 160});
+W(s, 520, [['والأحلى', 27.18]], 'sans ca', 'font-size:176px', {sfx: 'whoosh', g: .6});
+W(s, 720, [['من', 28.04], ['هذا', 28.2], ['كامل؟', 28.48]], 'serif ca', 'font-size:116px', {g: .35});
+sfx('riser', 27.3, .55, 1.75);
+s.querySelectorAll(':scope > .row').forEach(r => OUT(r, 29.02, {d: .26, y: -80}));
+OUT(sB, 29.0, {d: .3, x: 300});
+W(s, 330, [['ما', 29.2], ['تحتاجش', 29.34]], 'sans ca', 'font-size:124px', {sfx: 'impact', g: .5});
+const cardEl = el(s, 'div', 'a', 'left:190px;top:720px;width:700px;height:440px;border-radius:34px;overflow:hidden;background:linear-gradient(135deg,#fafafa 0%,#cfcfcf 45%,#f1f1f1 60%,#b9b9b9 100%);box-shadow:0 50px 80px rgba(0,0,0,.32),inset 0 2px 0 #fff',
+  `<div class="a" style="left:46px;top:46px;font:800 30px Inter;letter-spacing:.25em;color:#2a2a2a">BANK CARD</div>
+   <div class="a" style="left:46px;top:130px;width:96px;height:74px;border-radius:12px;background:linear-gradient(135deg,#e9e9e9,#9a9a9a);box-shadow:inset 0 0 0 2px rgba(0,0,0,.25)"></div>
+   <div class="a" style="left:46px;top:270px;font:600 46px Inter;letter-spacing:.12em;color:#222;direction:ltr">•••• •••• •••• 4821</div>
+   <div class="a" style="left:46px;top:360px;font:600 24px Inter;letter-spacing:.2em;color:#555">VALID 09/29</div>
+   <div class="a" style="right:46px;top:340px;width:110px;height:70px"><div class="a" style="left:0;width:70px;height:70px;border-radius:50%;background:#1a1a1a"></div><div class="a" style="left:40px;width:70px;height:70px;border-radius:50%;background:#7a7a7a;mix-blend-mode:multiply"></div></div>`);
+IN(cardEl, 29.86, {d: .7, y: 220, s: .8, b: 16}); A(cardEl, {rx: [[29.86, 55], [30.5, 10, 'o5']], ry: [[29.86, -25], [30.5, -6, 'o5']]}); sfx('whoosh', 29.8, .6);
+const X = document.createElementNS(svgNS, 'svg');
+X.setAttribute('width', 1080); X.setAttribute('height', 1920); X.setAttribute('class', 'a'); X.style.cssText = 'left:0;top:0';
+X.innerHTML = '<path d="M250 760 L830 1120" pathLength="1" stroke-dasharray="1 1" stroke="#e01b24" stroke-width="34" stroke-linecap="round" fill="none"/><path d="M830 760 L250 1120" pathLength="1" stroke-dasharray="1 1" stroke="#e01b24" stroke-width="34" stroke-linecap="round" fill="none"/>';
+s.appendChild(X);
+A(X.children[0], {d: [[30.4, 0], [30.58, 1, 'out']]}); A(X.children[1], {d: [[30.62, 0], [30.8, 1, 'out']]});
+sfx('scratch', 30.4, .8); sfx('scratch', 30.62, .8); shake(30.6, 7);
+OUT(cardEl, 31.0, {d: .3, y: -40, s: .7}); OUT(X, 31.0, {d: .3, y: -40, s: .7});
+OUT(s.querySelectorAll(':scope > .row')[2], 31.0, {d: .25});
+W(s, 330, [['ولا', 31.08], ['الدفع', 31.5]], 'sans ca', 'font-size:124px');
+W(s, 480, [['بالعملة الصعبة', 31.9]], 'serif ca', 'font-size:100px', {g: .3});
+const coins = [['$', 830], ['€', 540], ['£', 250]].map(([c, cx], i) => {
+  const co = el(s, 'div', 'a', `left:${cx - 120}px;top:820px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#4a4a4a,#0e0e0e 72%);box-shadow:0 30px 50px rgba(0,0,0,.35),inset 0 0 0 10px rgba(255,255,255,.08);color:#f2f2f2;font:800 130px/236px Inter;text-align:center`, c);
+  A(co, {s: [[31.55 + i * .14, 0], [31.95 + i * .14, 1, 'back']], r: [[31.55 + i * .14, -120], [31.95 + i * .14, 0, 'o5']]}); sfx('pop', 31.6 + i * .14, .55);
+  A(co, {y: [[32.55 + i * .04, 0], [32.95 + i * .04, 900, 'in']], r: [[32.55 + i * .04, 0], [32.95 + i * .04, [-40, 30, 50][i], 'in']]});
+  return co;
+});
+const strike = el(s, 'div', 'a', 'left:100px;top:928px;width:880px;height:26px;border-radius:13px;background:#e01b24;box-shadow:0 10px 20px rgba(224,27,36,.35)');
+A(strike, {cl: [[32.28, 0], [32.48, 1, 'out']], y: [[32.55, 0], [32.95, 900, 'in']], r: [[32.55, 0], [32.95, -12, 'in']]});
+sfx('scratch', 32.28, .8); sfx('whoosh', 32.55, .5);
+
+// S7 — pay in Algerian dinar
+s = SC(32.85, 38.62, {out: 'zoom', outT: 38.3});
+ribbon(s, 'M-120 120 C 300 260, 780 -40, 1220 150', 40, '#161616', 32.9, 1);
+star(s, 990, 1600, 220, 33.0, {fx: 300, fy: 200});
+W(s, 290, [['خلّص', 32.96]], 'serif ca', 'font-size:104px', {g: .4});
+W(s, 430, [['بالدينار', 33.54], ['الجزائري', 34.04]], 'sans ca', 'font-size:114px');
+let ext = []; for (let i = 1; i <= 26; i++) ext.push(`${i * .55}px ${i}px 0 hsl(0,0%,${58 - i * 1.6}%)`);
+ext.push('0 50px 60px rgba(0,0,0,.35)');
+const da = el(s, 'div', 'row lat', `top:790px;font-size:420px;font-weight:900;letter-spacing:-.04em;color:#141414;text-shadow:${ext.join(',')}`, 'DA');
+A(da, {o: [[34.72, 0], [34.78, 1, 'lin']], s: [[34.72, 2.6], [35.1, 1, 'o5'], [35.96, 1], [36.4, .82, 'io']], b: [[34.72, 24], [35.0, 0]], y: [[35.96, 0], [36.4, -40, 'io']]});
+sfx('impact', 35.02, 1); sfx('boom', 35.02, .7); shake(35.04, 22);
+barcode(s, 540, 1045, 35.2, 200, 52, 9);
+L(s, 1100, 'ALGERIAN DINAR', 35.25, 'lat', 'font-size:26px;letter-spacing:.42em;color:#555;font-weight:600', .02);
+W(s, 1185, [['وبطريقة', 35.96]], 'serif ca', 'font-size:70px', {g: .3});
+[['سهلة', 760, 36.42], ['ومريحة', 320, 37.04]].forEach(([txt, cx, t]) => {
+  selBox(s, cx, 1315, 380, 136, t - .04);
+  const r = el(s, 'div', 'row sans', `top:1315px;left:${cx - 190}px;right:auto;width:380px;font-size:64px;display:flex;justify-content:center;align-items:center;gap:20px`, `<span>${txt}</span>`);
+  const ck = el(r, 'span', '', 'display:inline-flex;width:62px;height:62px;border-radius:50%;background:#151515;align-items:center;justify-content:center', icon('check', 40, '#fff', 4));
+  IN(r, t, {s: 1.1, y: 20, b: 10, d: .4}); A(ck, {s: [[t + .15, 0], [t + .5, 1, 'back']]}); sfx('ding', t + .2, .35);
+});
+
+// S8 — whoever you are (polaroids) -> everything you need
+s = SC(38.3, 45.95, {out: 'zoom', outT: 45.65});
+W(s, 215, [['سواء', 38.42], ['كنت', 38.76]], 'serif ca', 'font-size:86px', {g: .35});
+dashed(s, 'M-30 320 Q 540 400 1110 320', 38.45, .6);
+dashed(s, 'M-30 800 Q 540 880 1110 800', 40.85, .6);
+const P = [
+  polaroid(s, 770, 345, 330, 405, 'cap', 'طالب', 38.98, {swing: 12}),
+  polaroid(s, 310, 345, 330, 405, 'camera', 'صانع محتوى', 39.82, {swing: -12}),
+  polaroid(s, 770, 825, 330, 405, 'brief', 'صاحب مشروع', 41.06, {swing: 14}),
+  polaroid(s, 310, 825, 330, 405, 'sofa', 'تستمتع بوقتك', 42.92, {swing: -14}),
+];
+P.forEach((p, i) => A(p, {y: [[43.82 + i * .05, 0], [44.4 + i * .05, 1700, 'in']], r: [[43.82 + i * .05, 0], [44.4 + i * .05, [25, -30, 18, -22][i], 'in']]}));
+sfx('whoosh', 43.8, .8);
+s.querySelectorAll(':scope > svg, :scope > .row').forEach(r => OUT(r, 43.8, {d: .3}));
+W(s, 340, [['راح', 43.98], ['تلقى', 44.36]], 'sans ca', 'font-size:136px');
+HL(s, 510, [['واش', 44.76], ['تحتاج', 44.9]], 'font-size:100px');
+[['capcut', 930, 900], ['chatgpt', 735, 840], ['gemini', 540, 820], ['adobe', 345, 840], ['netflix', 150, 900]].forEach(([n, x, y], i) =>
+  logo(s, n, x, y + 120, 230, 44.4 + i * .1, 'pop', {float: 8}));
+star(s, 990, 1450, 160, 44.5, {fx: 300, rot: 200});
+star(s, 80, 380, 170, 44.6, {fx: -300, rot: -200});
+
+// S9 — CTA
+s = SC(45.7, 52.4, {out: 'none'});
+ribbon(s, 'M1220 1420 C 820 1300, 300 1520, -120 1380', 40, '#161616', 45.75, 1);
+W(s, 300, [['ما', 45.8], ['تضيعش', 46.14]], 'sans ca', 'font-size:132px');
+W(s, 450, [['وقتك', 46.58]], 'serif ca', 'font-size:112px', {g: .35});
+const sw = el(s, 'div', 'a', 'left:440px;top:560px;width:200px;height:220px',
+  `<svg viewBox="0 0 32 34" width="200" height="220" fill="none" stroke="#151515" stroke-width="2.2" stroke-linecap="round"><circle cx="16" cy="19" r="12" fill="#fff"/><path d="M13 3h6M16 3v4M26 9l2-2"/></svg>`);
+const hand = el(sw, 'div', 'a', 'left:96px;top:46px;width:8px;height:84px;border-radius:4px;background:#e01b24;transform-origin:50% 100%');
+IN(sw, 46.3, {s: .4, y: 40, b: 10, d: .45, e: 'back'});
+A(hand, {r: [[46.3, 0], [47.0, 720, 'io']]});
+[46.45, 46.65, 46.85].forEach(t => sfx('tick', t, .6));
+OUT(sw, 47.0, {d: .3});
+s.querySelectorAll(':scope > .row').forEach(r => OUT(r, 47.0, {d: .28}));
+W(s, 300, [['ابعثلنا', 47.12], ['رسالة', 47.76]], 'sans ca', 'font-size:124px');
+HL(s, 465, [['الآن', 48.16]], 'font-size:100px');
+const chat = el(s, 'div', 'a', 'left:110px;top:620px;width:860px;height:640px;border-radius:40px;background:linear-gradient(170deg,#fff,#efefef);box-shadow:0 50px 80px rgba(0,0,0,.25),0 8px 16px rgba(0,0,0,.1);overflow:hidden;direction:rtl');
+el(chat, 'div', 'a', 'left:0;right:0;top:0;height:120px;border-bottom:2px solid #e2e2e2;display:flex;align-items:center;gap:22px;padding:0 36px',
+  `<div style="width:72px;height:72px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#555,#0f0f0f)"></div>
+   <div><div style="font:700 36px Plex;color:#151515">الاشتراكات الرقمية</div><div style="font:600 24px Plex;color:#3a8f3a">● متصل الآن</div></div>`);
+const bubIn = el(chat, 'div', 'a', 'left:36px;top:160px;max-width:520px;padding:18px 28px;border-radius:28px 28px 28px 6px;background:#e8e8e8;font:600 34px Plex;color:#222', 'أهلاً! واش يناسبك؟');
+const bubOut = el(chat, 'div', 'a', 'right:36px;top:290px;padding:18px 28px;border-radius:28px 28px 6px 28px;background:#151515;font:600 34px Plex;color:#fff', 'سلام، حاب نشترك ✓✓');
+const inp = el(chat, 'div', 'a', 'right:36px;left:170px;bottom:36px;height:96px;border-radius:48px;background:#fff;box-shadow:inset 0 0 0 2px #dcdcdc;padding:0 34px;display:flex;align-items:center;font:600 36px Plex;color:#222');
+const typed = el(inp, 'span', '', '', 'سلام، حاب نشترك');
+el(inp, 'span', '', 'width:3px;height:44px;background:#151515;margin-right:4px');
+const sendB = el(chat, 'div', 'a', 'left:36px;bottom:36px;width:110px;height:96px;border-radius:48px;background:#151515;display:flex;align-items:center;justify-content:center', icon('send', 50, '#fff', 2.4));
+const cursor = el(s, 'div', 'a', 'left:0;top:0;width:70px;height:80px',
+  '<svg viewBox="0 0 24 28" width="70" height="80" style="filter:drop-shadow(0 8px 8px rgba(0,0,0,.35))"><path d="M3 2l17 12-7.5 1.5L17 25l-3.5 1.5-4.5-9.5L3 22z" fill="#111" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>');
+IN(chat, 47.12, {d: .6, y: 180, s: .9, b: 14}); A(chat, {rx: [[47.12, 25], [47.7, 0, 'o5']]}); sfx('whoosh', 47.08, .6);
+IN(bubIn, 47.4, {s: .6, y: 20, b: 6, d: .35, e: 'back'}); sfx('pop', 47.45, .4);
+typer(typed, 47.5, 48.0);
+A(cursor, {x: [[47.5, 980], [48.05, 205, 'io']], y: [[47.5, 1500], [48.05, 1185, 'io']], o: [[47.5, 0], [47.6, 1, 'lin'], [48.6, 1], [48.75, 0, 'lin']], s: [[48.1, 1], [48.16, .82, 'out'], [48.3, 1, 'back']]});
+A(sendB, {s: [[48.1, 1], [48.17, .86, 'out'], [48.4, 1, 'back']]}); sfx('click', 48.16, 1);
+A(typed, {o: [[48.2, 1], [48.22, 0, 'lin']]});
+IN(bubOut, 48.24, {s: .5, x: -200, y: 120, b: 8, d: .45, e: 'back'}); sfx('send', 48.2, .8);
+OUT(chat, 48.72, {d: .35, y: 80, s: .85});
+s.querySelectorAll(':scope > .row').forEach(r => OUT(r, 48.7, {d: .28}));
+W(s, 330, [['واكتشف', 48.8]], 'serif ca', 'font-size:110px', {g: .35});
+W(s, 500, [['الاشتراك', 49.32]], 'sans ca', 'font-size:150px');
+HL(s, 680, [['اللي', 49.96], ['يناسبك!', 50.16]], 'font-size:104px');
+sfx('impact', 50.2, .8); shake(50.22, 8);
+[['capcut', 930], ['chatgpt', 735], ['gemini', 540], ['adobe', 345], ['netflix', 150]].forEach(([n, x], i) =>
+  logo(s, n, x, 1060 + (i % 2) * 40, 210, 49.0 + i * .1, 'pop', {float: 7}));
+star(s, 90, 1300, 170, 49.1, {fx: -300, rot: -200});
+star(s, 990, 220, 190, 49.2, {fx: 300, rot: 200});
+const sweep = el(s, 'div', 'a', 'left:-700px;top:-200px;width:500px;height:2400px;transform-origin:50% 50%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent);mix-blend-mode:soft-light');
+A(sweep, {x: [[50.7, 0], [51.5, 2400, 'io']], r: [[50.7, 18]]}); sfx('shimmer', 50.7, .6);
+CUR = null;
+A(document.getElementById('fade'), {o: [[-1, 0], [51.65, 0], [52.35, 1, 'io']]});
+
+// ===================== frame driver =====================
+const grainFrames = (() => {
+  const c = document.createElement('canvas'); c.width = 540; c.height = 960; const g = c.getContext('2d'), out = [];
+  for (let k = 0; k < 6; k++) {
+    const im = g.createImageData(540, 960);
+    for (let i = 0; i < im.data.length; i += 4) { const v = 128 + (hash(k * 1e6 + i) - .5) * 200; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; }
+    g.putImageData(im, 0, 0); out.push(`url(${c.toDataURL('image/png')})`);
+  }
+  return out;
+})();
+const cam = document.getElementById('cam'), grain = document.getElementById('grain');
+window.seek = (frame) => {
+  const t = frame / FPS - OFFSET;
+  for (const sc of SCENES) sc.style.display = (t >= sc._t[0] - .001 && t <= sc._t[1] + .001) ? '' : 'none';
+  for (const e of ANIM) if (!e._scene || e._scene.style.display !== 'none') apply(e, t);
+  for (const [e, t0, t1] of GLITCH) {
+    if (t >= t0 && t <= t1) {
+      const r1 = hash(frame * 3.1), r2 = hash(frame * 7.7), dx = (r1 - .5) * 26;
+      e.style.textShadow = `${dx}px 0 rgba(255,0,60,.85),${-dx}px 0 rgba(0,220,255,.85)`;
+      e.style.transform = `translateX(${(r2 - .5) * 30}px) skewX(${(r1 - .5) * 10}deg)`;
+      e.style.clipPath = r2 > .55 ? `inset(${r1 * 60}% 0 ${(1 - r1) * 20}% 0)` : 'none';
+    } else if (e._g !== 0) { e.style.textShadow = ''; e.style.transform = ''; e.style.clipPath = ''; }
+  }
+  for (const [e, t0, t1] of TYPERS) { const p = Math.max(0, Math.min(1, (t - t0) / (t1 - t0))); e.textContent = e._full.slice(0, Math.round(p * e._full.length)); }
+  // camera: slow push per scene + drift + impact shakes
+  let cur = SCENES[0]; for (const sc of SCENES) if (t >= sc._t[0]) cur = sc;
+  const p = Math.min(1, Math.max(0, (t - cur._t[0]) / (cur._t[1] - cur._t[0])));
+  let sx = 0, sy = 0;
+  for (const [t0, a] of SHAKES) { const d = t - t0; if (d > 0 && d < .7) { const k = a * Math.exp(-d * 7); sx += k * Math.sin(d * 70); sy += k * Math.cos(d * 55); } }
+  cam.style.transform = `translate(${Math.sin(t * .7) * 6 + sx}px,${Math.cos(t * .6) * 5 + sy}px) rotate(${Math.sin(t * .45) * .35}deg) scale(${1 + .045 * E.io(p)})`;
+  grain.style.backgroundImage = grainFrames[frame % 6];
+  captions(t);
+};
+window.ready = Promise.all([document.fonts.ready, ...[...document.images].map(i => i.decode())]).then(() => { window.seek(0); return true; });
+</script>
+</body>
+</html>

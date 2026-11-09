@@ -1,0 +1,7 @@
+{
+  "name": "subscriptions-ad",
+  "private": true,
+  "type": "module",
+  "scripts": {"build": "./build.sh"},
+  "dependencies": {"puppeteer-core": "^23.11.1"}
+}
