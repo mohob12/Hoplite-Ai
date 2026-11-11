@@ -129,11 +129,37 @@ p { margin: 0; }
   display: grid; place-items: center; border: 2px solid var(--beige);
 }
 
-/* Logo: echoes the neon sign — yellow M plate + red "kiffan". */
-.logo { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; direction: ltr; }
-.logo-mark { width: 38px; height: 38px; flex: none; }
-.logo-word { font-family: 'Baloo 2', 'Cairo', sans-serif; font-weight: 800; font-size: 1.6rem; color: var(--red); letter-spacing: -0.5px; line-height: 1; }
-.logo-word small { color: var(--black); font-size: 0.95rem; margin-inline-end: 2px; }
+/* Logo: the restaurant’s own artwork (public/brand). */
+.logo { display: inline-flex; align-items: center; text-decoration: none; flex: none; }
+.logo img { height: 40px; width: auto; }
+
+/* ---------- Hero banner (full width, 3:1) ---------- */
+.hero-banner { position: relative; width: 100%; aspect-ratio: 3 / 1; overflow: hidden; background: #141414; isolation: isolate; }
+.hero-banner-photo {
+  position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover;
+  transform-origin: 40% 50%; animation: banner-drift 26s ease-in-out infinite alternate;
+}
+@keyframes banner-drift { from { transform: scale(1.02); } to { transform: scale(1.09) translateX(-1%); } }
+@media (prefers-reduced-motion: reduce) { .hero-banner-photo { animation: none; transform: scale(1.02); } }
+/* Dark falloff on the logo side plus soft top/bottom letterbox shading. */
+.hero-banner::after {
+  content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    linear-gradient(270deg, rgba(12, 10, 9, 0.93) 0%, rgba(12, 10, 9, 0.84) 24%, rgba(12, 10, 9, 0.45) 38%, rgba(12, 10, 9, 0.1) 52%, transparent 62%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.32) 0%, transparent 22%, transparent 74%, rgba(0, 0, 0, 0.42) 100%);
+}
+.hero-banner-brand {
+  position: absolute; z-index: 2; right: 4.5%; top: 56%; transform: translateY(-50%);
+  width: 25%; display: flex; flex-direction: column; align-items: center; gap: 0.9vw;
+}
+.hero-banner-brand img { width: 100%; height: auto; filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55)); }
+.hero-banner-tag {
+  color: rgba(255, 255, 255, 0.88); font-weight: 600; font-size: clamp(0.62rem, 1.15vw, 1.05rem);
+  letter-spacing: 0.18em; text-transform: uppercase; display: flex; align-items: center; gap: 0.8em; white-space: nowrap;
+}
+/* Letter-spacing would break Arabic letter joining. */
+[dir='rtl'] .hero-banner-tag { letter-spacing: 0; font-size: clamp(0.7rem, 1.3vw, 1.2rem); }
+.hero-banner-tag::before, .hero-banner-tag::after { content: ''; width: 2.2em; height: 1px; background: rgba(242, 183, 5, 0.75); }
 
 /* ---------- Hero ---------- */
 .hero { padding: 36px 0 20px; }
@@ -276,7 +302,6 @@ p { margin: 0; }
 /* ---------- Admin ---------- */
 .admin { min-height: 100dvh; display: grid; grid-template-columns: 240px 1fr; }
 .admin-side { background: var(--white); color: var(--black); border-inline-end: 1px solid var(--line); padding: 18px 14px; position: sticky; top: 0; height: 100dvh; display: flex; flex-direction: column; gap: 6px; }
-.admin-side .logo-word small { color: var(--black); }
 .admin-side nav { display: flex; flex-direction: column; gap: 2px; margin-top: 18px; }
 .admin-side nav a { padding: 10px 12px; border-radius: var(--radius-sm); text-decoration: none; color: var(--muted); font-weight: 600; display: flex; align-items: center; gap: 8px; }
 .admin-side nav a.active { background: var(--black); color: var(--white); }
@@ -402,7 +427,7 @@ input[type='range'] { accent-color: var(--red); width: 100%; }
   .overlay:has(.modal) { align-items: flex-end; }
   .modal { width: 100%; margin: 0; border-radius: 20px 20px 0 0; max-height: 92dvh; }
   .new-order-alert { inset-inline: 12px; min-width: 0; }
-  .logo-word { font-size: 1.35rem; }
+  .logo img { height: 34px; }
 }
 .mobile-only { display: none; }
 @media (max-width: 860px) { .mobile-only { display: revert; } }
@@ -585,7 +610,7 @@ input[type='range'] { accent-color: var(--red); width: 100%; }
     repeating-linear-gradient(45deg, rgba(27, 27, 27, 0.025) 0 10px, transparent 10px 20px),
     var(--beige-deep);
 }
-.img-ph-mark { width: 30%; max-width: 84px; height: auto; aspect-ratio: 1; opacity: 0.5; filter: saturate(0.85); }
+.img-ph-mark { width: 30%; max-width: 84px; height: auto; aspect-ratio: 1; opacity: 0.55; }
 .modal-img.img-ph { aspect-ratio: 16 / 10; height: auto; }
 
 /* Photo credits */

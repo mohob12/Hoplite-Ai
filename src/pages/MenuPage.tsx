@@ -6,6 +6,7 @@ import { useSettings } from '../lib/settings';
 import ProductModal, { orderableVariants, productImage } from '../components/ProductModal';
 import CartPopup from '../components/CartPopup';
 import { ImagePlaceholder } from '../components/Logo';
+import HeroBanner from '../components/HeroBanner';
 import type { Category, Product } from '../lib/types';
 
 export default function MenuPage() {
@@ -77,6 +78,8 @@ export default function MenuPage() {
   };
 
   return (
+    <>
+    <HeroBanner />
     <div className="container">
       <section className="hero">
         <h1>
@@ -169,5 +172,6 @@ export default function MenuPage() {
 
       {added && <CartPopup addedKey={added.key} addedName={added.name} onClose={closePopup} />}
     </div>
+    </>
   );
 }

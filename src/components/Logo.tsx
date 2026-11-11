@@ -1,28 +1,9 @@
 import { Link } from 'react-router-dom';
 
-export function LogoMark({ className = 'logo-mark' }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 64 64" aria-hidden="true">
-      <circle cx="32" cy="32" r="30" fill="#F2B705" />
-      <path
-        d="M17 46V22l9 14 6-10 6 10 9-14v24"
-        fill="none"
-        stroke="#fff"
-        strokeWidth="5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 export default function Logo({ to = '/' }: { to?: string }) {
   return (
     <Link to={to} className="logo" aria-label="Mac Kiffan">
-      <LogoMark />
-      <span className="logo-word">
-        <small>Mac</small>kiffan
-      </span>
+      <img src="/brand/logo.png" alt="Mac Kiffan" width={317} height={96} />
     </Link>
   );
 }
@@ -31,7 +12,7 @@ export default function Logo({ to = '/' }: { to?: string }) {
 export function ImagePlaceholder({ className = '' }: { className?: string }) {
   return (
     <span className={`img-ph ${className}`} aria-hidden="true">
-      <LogoMark className="img-ph-mark" />
+      <img className="img-ph-mark" src="/brand/mark.png" alt="" />
     </span>
   );
 }

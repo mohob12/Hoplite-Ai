@@ -148,7 +148,7 @@ class Notifier {
     if (this.settings.sound && this.activated) this.enqueueChime();
     if (this.settings.desktop && this.desktopPermission === 'granted') {
       try {
-        const n = new Notification(order.title, { body: order.body, tag: `mk-order-${order.id}`, icon: '/favicon.svg' });
+        const n = new Notification(order.title, { body: order.body, tag: `mk-order-${order.id}`, icon: '/brand/mark.png' });
         n.onclick = () => {
           window.focus();
           n.close();
