@@ -33,12 +33,12 @@ body {
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
-/* Decorative geometric pattern on a fixed layer, so it stays still while content scrolls
-   (background-attachment: fixed is ignored on iOS). */
+/* Soft eight-point star + small flower motif on a fixed layer, so it stays still while content
+   scrolls (background-attachment: fixed is ignored on iOS). */
 body::before {
   content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background:
-    url('./assets/pattern.svg') center top / 96px 96px repeat,
+    url('./assets/pattern.svg') center top / 64px 64px repeat,
     linear-gradient(180deg, #fbf7ee 0%, var(--beige) 100%);
 }
 img { max-width: 100%; display: block; }
