@@ -397,3 +397,15 @@ input[type='range'] { accent-color: var(--red); width: 100%; }
 @media (max-width: 640px) { .hide-sm { display: none; } }
 .new-order-alert .icon-btn { color: var(--black); }
 .summary .line > :last-child { white-space: nowrap; }
+
+/* Live-orders type filter */
+.type-filter { display: flex; flex-wrap: wrap; gap: 8px; }
+.type-filter button {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px;
+  border-radius: 999px; border: 1.5px solid var(--line); background: var(--white);
+  font-weight: 700; cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.type-filter button[aria-pressed='true'] { background: var(--black); color: var(--white); border-color: var(--black); }
+.type-filter .tf-count { min-width: 24px; padding: 0 7px; border-radius: 999px; background: var(--beige); color: var(--black); font-size: 0.8rem; text-align: center; }
+.type-filter .tf-new { min-width: 22px; padding: 0 7px; border-radius: 999px; background: var(--red); color: var(--white); font-size: 0.78rem; text-align: center; }
+@media (max-width: 640px) { .type-filter button { flex: 1 1 calc(50% - 8px); justify-content: center; } }

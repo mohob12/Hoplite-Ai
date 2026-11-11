@@ -9,15 +9,20 @@ export function formatDA(amount: number, locale: Locale): string {
   return locale === 'ar' ? `${n} دج` : `${n} DA`;
 }
 
+// Arabic uses the fr-DZ numeric format (dd/mm/yyyy 24h): mixing "ص/م" with
+// LTR-isolated numbers scrambles the date in RTL layouts.
+const dateLocale: Record<Locale, string> = { ar: 'fr-DZ', fr: 'fr-DZ', en: 'en-GB' };
+
 export function formatDateTime(iso: string, locale: Locale): string {
-  return new Intl.DateTimeFormat(intlLocale[locale], {
+  return new Intl.DateTimeFormat(dateLocale[locale], {
     dateStyle: 'short',
     timeStyle: 'short',
+    hourCycle: 'h23',
   }).format(new Date(iso));
 }
 
 export function formatTime(iso: string, locale: Locale): string {
-  return new Intl.DateTimeFormat(intlLocale[locale], { timeStyle: 'short' }).format(new Date(iso));
+  return new Intl.DateTimeFormat(dateLocale[locale], { timeStyle: 'short', hourCycle: 'h23' }).format(new Date(iso));
 }
 
 /** Pick the localized value of `${base}_${locale}`, falling back to French then Arabic. */

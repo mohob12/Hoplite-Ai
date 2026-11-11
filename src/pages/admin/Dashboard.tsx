@@ -1,14 +1,43 @@
+import { useState } from 'react';
 import { useI18n } from '../../lib/i18n';
 import { useOrdersFeed } from '../../lib/ordersFeed';
+import { OPEN_STATUSES } from '../../lib/format';
 import OrderCard from '../../components/admin/OrderCard';
 import { ActivateBanner } from '../../components/admin/StatusIndicators';
+import type { OrderType } from '../../lib/types';
+
+type TypeFilter = OrderType | 'all';
+const FILTER_KEY = 'mk.dash.typeFilter';
+const FILTERS: { value: TypeFilter; icon: string }[] = [
+  { value: 'all', icon: '' },
+  { value: 'dine_in', icon: '🍽' },
+  { value: 'takeaway', icon: '🥡' },
+  { value: 'delivery', icon: '🛵' },
+];
+
+function savedFilter(): TypeFilter {
+  const v = localStorage.getItem(FILTER_KEY);
+  return v === 'dine_in' || v === 'takeaway' || v === 'delivery' ? v : 'all';
+}
 
 export default function Dashboard() {
   const { t } = useI18n();
   const { orders, counts, fresh, loading, error, refresh } = useOrdersFeed();
-  const incoming = orders.filter((o) => o.status === 'new');
-  const active = orders
-    .filter((o) => ['confirmed', 'preparing', 'ready', 'out_for_delivery'].includes(o.status))
+  const [filter, setFilterState] = useState<TypeFilter>(savedFilter);
+  const setFilter = (f: TypeFilter) => {
+    localStorage.setItem(FILTER_KEY, f);
+    setFilterState(f);
+  };
+
+  const open = orders.filter((o) => OPEN_STATUSES.includes(o.status));
+  const tally = (f: TypeFilter) => {
+    const list = f === 'all' ? open : open.filter((o) => o.order_type === f);
+    return { total: list.length, fresh: list.filter((o) => o.status === 'new').length };
+  };
+  const shown = filter === 'all' ? open : open.filter((o) => o.order_type === filter);
+  const incoming = shown.filter((o) => o.status === 'new');
+  const active = shown
+    .filter((o) => o.status !== 'new')
     .sort((a, b) => a.created_at.localeCompare(b.created_at));
 
   const stats: { key: keyof typeof counts; label: string; cls?: string }[] = [
@@ -32,6 +61,30 @@ export default function Dashboard() {
             <div className="value num">{counts[s.key]}</div>
           </div>
         ))}
+      </div>
+
+      <div className="type-filter" role="group" aria-label={t('cart.orderType')} data-testid="type-filter">
+        {FILTERS.map(({ value, icon }) => {
+          const c = tally(value);
+          return (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={filter === value}
+              onClick={() => setFilter(value)}
+              data-testid={`filter-${value}`}
+            >
+              {icon && <span aria-hidden="true">{icon}</span>}
+              {value === 'all' ? t('common.all') : t(`type.${value}`)}
+              <span className="tf-count num">{c.total}</span>
+              {c.fresh > 0 && (
+                <span className="tf-new num" title={t('dash.new')}>
+                  {c.fresh}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {error && (
