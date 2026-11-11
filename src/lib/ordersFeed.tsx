@@ -10,7 +10,9 @@ export type ConnectionState = 'connecting' | 'live' | 'polling' | 'offline';
 
 export const ORDER_SELECT = '*, order_items(*, order_item_extras(*))';
 export const POLL_INTERVAL_S = 10;
-const SAFETY_POLL_MS = 60_000;
+// Reconcile even while "live": a socket can report SUBSCRIBED yet deliver nothing
+// (e.g. right after the realtime server restarts).
+const SAFETY_POLL_MS = 20_000;
 const FRESH_MS = 30_000;
 
 export interface IncomingAlert {

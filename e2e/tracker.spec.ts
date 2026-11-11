@@ -26,7 +26,7 @@ test.beforeEach(async ({ context }) => {
 });
 
 test('tracker advances live, glows green and shows the table in a yellow circle', async ({ page, context, request }) => {
-  const burger = await variantId(request, 'Burger Classique');
+  const burger = await variantId(request, 'Classic Burger');
   const order = await placeOrder(request, {
     order_type: 'dine_in',
     customer_name: 'Suivi Salle',
@@ -75,7 +75,7 @@ test('tracker advances live, glows green and shows the table in a yellow circle'
 });
 
 test('vertical on mobile, horizontal on desktop; delivery has six steps', async ({ page, request }) => {
-  const burger = await variantId(request, 'Burger Classique');
+  const burger = await variantId(request, 'Classic Burger');
   const order = await placeOrder(request, {
     order_type: 'delivery',
     customer_name: 'Suivi Livraison',

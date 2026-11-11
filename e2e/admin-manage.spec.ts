@@ -51,7 +51,7 @@ test('restaurant settings: disabling delivery reaches the storefront', async ({ 
 
     const shop = await context.newPage();
     await shop.goto('/');
-    await shop.locator('[data-testid=dish][data-name="Panini"] [data-testid=dish-open]').click();
+    await shop.locator('[data-testid=dish][data-name="Panini au Thon"] [data-testid=dish-open]').click();
     await shop.getByTestId('add-to-cart').click();
     await shop.getByTestId('cart-popup-checkout').click();
     await expect(shop.getByTestId('type-delivery')).toBeDisabled();
@@ -66,7 +66,7 @@ test('restaurant settings: disabling delivery reaches the storefront', async ({ 
 test('product photo can be added by URL and removed', async ({ page }) => {
   await adminLogin(page);
   await page.goto('/admin/menu');
-  await page.locator('.am-prod-row', { hasText: 'Panini' }).click();
+  await page.locator('.am-prod-row', { hasText: 'Panini au Thon' }).click();
   const dialog = page.locator('.modal');
   const thumbs = dialog.locator('img');
   const before = await thumbs.count();

@@ -30,7 +30,7 @@ test.describe('admin dashboard — realtime orders', () => {
     await expect(card).toBeVisible({ timeout: 10_000 });
     await expect(card).toHaveClass(/fresh/);
     await expect(card).toContainText('Realtime Client');
-    await expect(card).toContainText('Burger Classique');
+    await expect(card).toContainText('Classic Burger');
     await expect(card).toContainText('Paiement en espèces');
     await expect(page.getByTestId('new-order-alert')).toContainText(reference);
     await expect(page.getByTestId('new-order-alert')).toContainText('À emporter');
@@ -55,7 +55,7 @@ test.describe('admin dashboard — realtime orders', () => {
 
   test('accept / advance / reject, delivery fee and receipt', async ({ page, request, context }) => {
     await adminLogin(page);
-    const burger = await variantId(request, 'Burger Classique');
+    const burger = await variantId(request, 'Classic Burger');
     const order = await placeOrder(request, {
       order_type: 'delivery',
       customer_name: 'Livraison Test',
@@ -72,7 +72,7 @@ test.describe('admin dashboard — realtime orders', () => {
 
     await card.getByTestId('fee-input').fill('250');
     await card.getByTestId('fee-confirm').click();
-    await expect(card.getByTestId('order-total')).toHaveText(/1\s?050 DA/);
+    await expect(card.getByTestId('order-total')).toHaveText(/^850 DA$/);
     await expect(card.getByTestId('accept-order')).toBeEnabled();
     await card.getByTestId('accept-order').click();
 
@@ -88,7 +88,7 @@ test.describe('admin dashboard — realtime orders', () => {
     const customer = await context.newPage();
     await customer.goto(`/order/${order.reference}?t=${order.access_token}`);
     await expect(customer.getByTestId('conf-fee')).toHaveText('250 DA');
-    await expect(customer.getByTestId('conf-total')).toHaveText(/1\s?050 DA/);
+    await expect(customer.getByTestId('conf-total')).toHaveText(/^850 DA$/);
     await expect(customer.getByTestId('order-status')).toContainText('Terminée');
     await customer.close();
 

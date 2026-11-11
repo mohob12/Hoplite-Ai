@@ -1,19 +1,29 @@
 begin;
 select plan(24);
 
--- Fixtures ------------------------------------------------------------------
+-- Fixtures (self-contained, rolled back; independent of the real menu) --------
+insert into public.categories (id, name_ar, name_fr, name_en) values
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'اختبار', 'TEST', 'TEST');
+insert into public.products (id, category_id, name_ar, name_fr, name_en) values
+  ('aaaaaaaa-0000-0000-0000-000000000011', 'aaaaaaaa-0000-0000-0000-000000000001', 'بيتزا', 'TEST Pizza', 'TEST Pizza'),
+  ('aaaaaaaa-0000-0000-0000-000000000012', 'aaaaaaaa-0000-0000-0000-000000000001', 'برغر', 'TEST Burger', 'TEST Burger'),
+  ('aaaaaaaa-0000-0000-0000-000000000013', 'aaaaaaaa-0000-0000-0000-000000000001', 'سلطة', 'TEST Salad', 'TEST Salad');
+insert into public.product_variants (id, product_id, name_ar, name_fr, name_en, price, verification) values
+  ('aaaaaaaa-0000-0000-0000-000000000021', 'aaaaaaaa-0000-0000-0000-000000000011', 'متوسطة', 'Moyenne', 'Medium', 600, 'verified'),
+  ('aaaaaaaa-0000-0000-0000-000000000022', 'aaaaaaaa-0000-0000-0000-000000000011', 'كبيرة', 'Grande', 'Large', 900, 'verified'),
+  ('aaaaaaaa-0000-0000-0000-000000000023', 'aaaaaaaa-0000-0000-0000-000000000012', 'عادي', 'Normal', 'Regular', 400, 'verified'),
+  ('aaaaaaaa-0000-0000-0000-000000000024', 'aaaaaaaa-0000-0000-0000-000000000013', '', '', '', 350, 'pending');
+insert into public.product_extras (id, product_id, name_ar, name_fr, name_en, price) values
+  ('aaaaaaaa-0000-0000-0000-000000000031', 'aaaaaaaa-0000-0000-0000-000000000011', 'فطر', 'Champignons', 'Mushrooms', 80),
+  ('aaaaaaaa-0000-0000-0000-000000000032', 'aaaaaaaa-0000-0000-0000-000000000012', 'جبن', 'Fromage', 'Cheese', 50);
+
 create temp table fx as
 select
-  (select v.id from public.product_variants v join public.products p on p.id = v.product_id
-    where p.name_fr = 'Pizza Margherita' and v.name_fr = 'Grande') as pizza_large,      -- 900
-  (select v.id from public.product_variants v join public.products p on p.id = v.product_id
-    where p.name_fr = 'Burger Classique') as burger,                                      -- 400
-  (select e.id from public.product_extras e join public.products p on p.id = e.product_id
-    where p.name_fr = 'Burger Classique' and e.name_fr = 'Fromage') as burger_cheese,    -- 50
-  (select e.id from public.product_extras e join public.products p on p.id = e.product_id
-    where p.name_fr = 'Pizza Margherita' and e.name_fr = 'Champignons') as pizza_mush,   -- 80
-  (select v.id from public.product_variants v join public.products p on p.id = v.product_id
-    where p.name_fr = 'Salade de thon' and v.price = 350) as salad_pending;
+  'aaaaaaaa-0000-0000-0000-000000000022'::uuid as pizza_large,   -- 900
+  'aaaaaaaa-0000-0000-0000-000000000023'::uuid as burger,        -- 400
+  'aaaaaaaa-0000-0000-0000-000000000032'::uuid as burger_cheese, -- 50
+  'aaaaaaaa-0000-0000-0000-000000000031'::uuid as pizza_mush,    -- 80
+  'aaaaaaaa-0000-0000-0000-000000000024'::uuid as salad_pending;
 grant select on fx to anon, authenticated;
 
 insert into auth.users (id, email, aud, role) values

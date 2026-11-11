@@ -40,7 +40,7 @@ Requirements: Node 20+, pnpm, Docker (for the local Supabase stack).
 ```bash
 pnpm install
 npx supabase start -x vector          # local Postgres/Auth/Realtime/Storage
-npx supabase db reset                 # applies migrations + seed (demo menu)
+npx supabase db reset                 # applies migrations (incl. the real menu) + local seed
 npx supabase status -o env            # shows API_URL, ANON_KEY, SERVICE_ROLE_KEY
 cp .env.example .env.local            # VITE_SUPABASE_URL=/sb works with the dev proxy, plus VITE_SUPABASE_ANON_KEY
 SUPABASE_URL=http://127.0.0.1:54321 SUPABASE_SERVICE_ROLE_KEY=<service role key> \
@@ -62,11 +62,16 @@ pnpm test:e2e                # Playwright on desktop, tablet and mobile viewport
 ## Going live
 
 1. Create a Supabase project, then `npx supabase link --project-ref <ref>` and `npx supabase db push`
-   (do **not** load `seed.sql` in production — its menu items and prices are demo placeholders).
+   — this also creates the Mac Kiffan menu (migration `20261111000003_mac_kiffan_menu.sql`, imported from
+   `Menu_MC_Kiffan_Organise.xlsx`). Do **not** load `seed.sql` in production: it only holds placeholder contact details and sample reviews.
 2. In Supabase Auth settings, disable public sign-ups; create staff accounts with `scripts/create-admin.mjs`.
 3. Build with `VITE_SUPABASE_URL=https://<ref>.supabase.co` and `VITE_SUPABASE_ANON_KEY=<anon key>`:
    `pnpm build`, and host `dist/` on any static host with SPA fallback to `index.html`.
-4. In the admin: enter the real menu, photos, restaurant phone/address/hours (`/admin/settings`),
+4. In the admin: add dish photos, the restaurant phone/address/hours (`/admin/settings`),
    and verify any pending prices.
 
-Demo food photos in `public/images/demo/` are from Unsplash (free license); replace them with the restaurant's own photos.
+Illustrative food photos in `public/images/demo/` are from Unsplash (free license) and are reused across similar dishes;
+replace them with the restaurant's own photos from `/admin/menu`. Dishes without a photo show a branded placeholder.
+
+**Menu import notes:** prices written as "A DA / B DA" without a stated meaning, and price ranges such as "550-600 DA",
+are imported as *pending verification* (hidden from customers) — 20 products, listed at the top of `/admin/menu`.

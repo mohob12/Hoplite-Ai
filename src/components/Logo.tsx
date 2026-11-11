@@ -26,3 +26,12 @@ export default function Logo({ to = '/' }: { to?: string }) {
     </Link>
   );
 }
+
+/** Shown for dishes without a photo yet. */
+export function ImagePlaceholder({ className = '' }: { className?: string }) {
+  return (
+    <span className={`img-ph ${className}`} aria-hidden="true">
+      <LogoMark className="img-ph-mark" />
+    </span>
+  );
+}

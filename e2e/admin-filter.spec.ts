@@ -11,7 +11,7 @@ test('live orders can be filtered by order type', async ({ page, request, contex
     }
   });
   await adminLogin(page);
-  const burger = await variantId(request, 'Burger Classique');
+  const burger = await variantId(request, 'Classic Burger');
   const dine = await placeOrder(request, {
     order_type: 'dine_in',
     customer_name: 'Filtre Salle',

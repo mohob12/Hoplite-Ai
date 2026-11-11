@@ -4,17 +4,17 @@ import { setLocale } from './helpers';
 test('items can be removed from the cart popup until it is empty', async ({ page, context }) => {
   await setLocale(context, 'fr');
   await page.goto('/');
-  for (const name of ['Panini', 'Chawarma']) {
+  for (const name of ['Panini au Thon', 'Panini au Poulet']) {
     await page.locator(`[data-testid=dish][data-name="${name}"] [data-testid=dish-open]`).click();
     await page.getByTestId('add-to-cart').click();
-    if (name === 'Panini') await page.getByTestId('cart-popup-continue').click();
+    if (name === 'Panini au Thon') await page.getByTestId('cart-popup-continue').click();
   }
   const popup = page.getByTestId('cart-popup');
   await expect(popup.getByTestId('cart-line')).toHaveCount(2);
-  await expect(page.getByTestId('cart-popup-subtotal')).toHaveText('650 DA');
-  await popup.getByTestId('cart-line').filter({ hasText: 'Panini' }).getByTestId('line-remove').click();
+  await expect(page.getByTestId('cart-popup-subtotal')).toHaveText('500 DA');
+  await popup.getByTestId('cart-line').filter({ hasText: 'Panini au Thon' }).getByTestId('line-remove').click();
   await expect(popup.getByTestId('cart-line')).toHaveCount(1);
-  await expect(page.getByTestId('cart-popup-subtotal')).toHaveText('350 DA');
+  await expect(page.getByTestId('cart-popup-subtotal')).toHaveText('250 DA');
   // Decreasing a quantity of 1 removes the line too.
   await popup.getByTestId('line-dec').click();
   await expect(page.getByTestId('cart-popup-empty')).toBeVisible();

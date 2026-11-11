@@ -5,6 +5,7 @@ import { formatDA, loc } from '../lib/format';
 import { useSettings } from '../lib/settings';
 import ProductModal, { orderableVariants, productImage } from '../components/ProductModal';
 import CartPopup from '../components/CartPopup';
+import { ImagePlaceholder } from '../components/Logo';
 import type { Category, Product } from '../lib/types';
 
 export default function MenuPage() {
@@ -113,7 +114,7 @@ export default function MenuPage() {
                     aria-label={name}
                     data-testid="dish-open"
                   >
-                    {img ? <img src={img} alt={name} loading="lazy" /> : null}
+                    {img ? <img src={img} alt={name} loading="lazy" /> : <ImagePlaceholder />}
                     {available ? (
                       <span className="plus" aria-hidden="true">
                         +
@@ -127,7 +128,7 @@ export default function MenuPage() {
                     <div className="dish-desc">{loc(p, 'description', locale)}</div>
                     {available && (
                       <div className="dish-price">
-                        {prices.length > 1 && <small>{t('menu.from')}</small>}
+                        {new Set(prices).size > 1 && <small>{t('menu.from')}</small>}
                         <span className="num">{formatDA(min, locale)}</span>
                       </div>
                     )}

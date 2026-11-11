@@ -40,7 +40,7 @@ export async function placeOrder(
 }
 
 export async function quickTakeaway(request: APIRequestContext, name = 'Client Test') {
-  const burger = await variantId(request, 'Burger Classique');
+  const burger = await variantId(request, 'Classic Burger');
   return placeOrder(request, {
     order_type: 'takeaway',
     customer_name: name,

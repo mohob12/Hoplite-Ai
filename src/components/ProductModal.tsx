@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useI18n } from '../lib/i18n';
 import { formatDA, loc } from '../lib/format';
 import { MAX_QTY, useCart } from '../lib/cart';
+import { ImagePlaceholder } from './Logo';
 import { useSettings } from '../lib/settings';
 import type { Product, Variant } from '../lib/types';
 
@@ -88,7 +89,7 @@ export default function ProductModal({
         data-testid="product-modal"
       >
         <div className="modal-head">
-          {img && <img className="modal-img" src={img} alt={name} />}
+          {img ? <img className="modal-img" src={img} alt={name} /> : <ImagePlaceholder className="modal-img" />}
           <button className="icon-btn modal-close" onClick={onClose} aria-label={t('common.close')}>
             ✕
           </button>
