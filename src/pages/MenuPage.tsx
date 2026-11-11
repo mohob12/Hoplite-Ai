@@ -7,6 +7,7 @@ import ProductModal, { orderableVariants, productImage } from '../components/Pro
 import CartPopup from '../components/CartPopup';
 import { ImagePlaceholder } from '../components/Logo';
 import HeroBanner from '../components/HeroBanner';
+import { matchesQuery, productHaystack } from '../lib/search';
 import type { Category, Product } from '../lib/types';
 
 export default function MenuPage() {
@@ -57,7 +58,7 @@ export default function MenuPage() {
     return () => io.disconnect();
   }, [hasTabs]);
 
-  const sections = useMemo(
+  const allSections = useMemo(
     () =>
       categories
         .map((c) => ({
@@ -69,6 +70,24 @@ export default function MenuPage() {
         .filter((s) => s.items.length > 0),
     [categories, products],
   );
+
+  const [query, setQuery] = useState('');
+  const searching = query.trim().length > 0;
+  const haystacks = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const { cat, items } of allSections) for (const p of items) m.set(p.id, productHaystack(p, cat));
+    return m;
+  }, [allSections]);
+  const sections = useMemo(
+    () =>
+      searching
+        ? allSections
+            .map((s) => ({ ...s, items: s.items.filter((p) => matchesQuery(haystacks.get(p.id) ?? '', query)) }))
+            .filter((s) => s.items.length > 0)
+        : allSections,
+    [allSections, haystacks, query, searching],
+  );
+  const resultCount = sections.reduce((n, s) => n + s.items.length, 0);
 
   const closePopup = useCallback(() => setAdded(null), []);
 
@@ -87,6 +106,33 @@ export default function MenuPage() {
         </h1>
         <p>{t('menu.subtitle')}</p>
         <div className="hero-strip" />
+        {allSections.length > 0 && (
+          <div className="menu-search" role="search">
+            <SearchIcon />
+            <input
+              type="search"
+              className="input"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Escape' && setQuery('')}
+              placeholder={t('menu.searchPlaceholder')}
+              aria-label={t('menu.search')}
+              enterKeyHint="search"
+              autoComplete="off"
+              data-testid="menu-search"
+            />
+            {searching && (
+              <button type="button" className="menu-search-clear" onClick={() => setQuery('')} aria-label={t('menu.searchClear')}>
+                ×
+              </button>
+            )}
+          </div>
+        )}
+        {searching && (
+          <p className="menu-search-count" aria-live="polite" data-testid="menu-search-count">
+            {resultCount > 0 ? t('menu.searchCount', { n: resultCount }) : ''}
+          </p>
+        )}
       </section>
 
       {settings && !settings.ordering_enabled && <div className="alert alert-warn">{t('menu.orderingOff')}</div>}
@@ -101,9 +147,17 @@ export default function MenuPage() {
           </button>
         </div>
       )}
-      {state === 'ok' && sections.length === 0 && <p className="muted">{t('menu.empty')}</p>}
+      {state === 'ok' && allSections.length === 0 && <p className="muted">{t('menu.empty')}</p>}
+      {searching && sections.length === 0 && (
+        <div className="panel menu-search-empty" data-testid="menu-search-empty">
+          <p>{t('menu.searchNone', { q: query.trim() })}</p>
+          <button type="button" className="btn btn-sm" onClick={() => setQuery('')}>
+            {t('menu.searchClear')}
+          </button>
+        </div>
+      )}
 
-      {sections.length > 0 && <div ref={tabsSentinel} aria-hidden="true" />}
+      {allSections.length > 0 && <div ref={tabsSentinel} aria-hidden="true" />}
       {sections.length > 0 && (
         <nav className={`cat-tabs ${tabsStuck ? 'stuck' : ''}`} aria-label={t('menu.title')}>
           {sections.map(({ cat }) => (
@@ -173,5 +227,14 @@ export default function MenuPage() {
       {added && <CartPopup addedKey={added.key} addedName={added.name} onClose={closePopup} />}
     </div>
     </>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg className="menu-search-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" strokeWidth="2" />
+      <path d="m20 20-3.5-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
   );
 }
