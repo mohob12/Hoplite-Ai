@@ -407,7 +407,11 @@ input[type='range'] { accent-color: var(--red); width: 100%; }
 .type-filter button[aria-pressed='true'] { background: var(--black); color: var(--white); border-color: var(--black); }
 .type-filter .tf-count { min-width: 24px; padding: 0 7px; border-radius: 999px; background: var(--beige); color: var(--black); font-size: 0.8rem; text-align: center; }
 .type-filter .tf-new { min-width: 22px; padding: 0 7px; border-radius: 999px; background: var(--red); color: var(--white); font-size: 0.78rem; text-align: center; }
-@media (max-width: 640px) { .type-filter button { flex: 1 1 calc(50% - 8px); justify-content: center; } }
+@media (max-width: 640px) {
+  .type-filter { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .type-filter button { min-width: 0; padding: 0 8px; gap: 6px; justify-content: center; font-size: 0.92rem; white-space: nowrap; }
+  .type-filter button:not(.tf-status) > span[aria-hidden] { display: none; }
+}
 
 /* ---------- Customer order tracker ---------- */
 :root { --green: #1f9d55; --green-text: #157a41; --green-glow: rgba(31, 157, 85, 0.55); }
@@ -577,3 +581,12 @@ input[type='range'] { accent-color: var(--red); width: 100%; }
 .credit { display: flex; gap: 12px; padding: 10px; align-items: flex-start; }
 .credit img { width: 72px; height: 54px; border-radius: 8px; object-fit: cover; flex: none; }
 .credit a { word-break: break-word; }
+/* Status filter sits after the order-type filters, separated by a thin divider. */
+.type-filter .tf-status { margin-inline-start: 10px; position: relative; }
+.type-filter .tf-status::before {
+  content: ''; position: absolute; inset-inline-start: -11px; top: 8px; bottom: 8px; width: 1.5px; background: var(--line);
+}
+@media (max-width: 640px) {
+  .type-filter .tf-status { margin-inline-start: 0; grid-column: 1 / -1; }
+  .type-filter .tf-status::before { display: none; }
+}

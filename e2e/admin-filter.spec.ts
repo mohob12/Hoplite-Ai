@@ -63,3 +63,47 @@ test('live orders can be filtered by order type', async ({ page, request, contex
   expect(pos(take.reference)).toBeLessThan(pos(deliv.reference));
   expect(pos(deliv.reference)).toBeLessThan(pos(other.reference));
 });
+
+test('"in progress" filter shows only accepted orders and hides the incoming list', async ({ page, request, context }) => {
+  await setLocale(context, 'fr');
+  await context.addInitScript(() => {
+    if (!sessionStorage.getItem('filter-reset')) {
+      sessionStorage.setItem('filter-reset', '1');
+      localStorage.removeItem('mk.dash.typeFilter');
+    }
+  });
+  await adminLogin(page);
+  const accepted = await quickTakeaway(request, 'En cours A');
+  const waiting = await quickTakeaway(request, 'Nouvelle B');
+  await orderCard(page, accepted.reference).getByTestId('accept-order').click();
+  await expect(orderCard(page, accepted.reference)).toHaveAttribute('data-status', 'confirmed');
+  await expect(orderCard(page, waiting.reference)).toHaveAttribute('data-status', 'new');
+
+  const btn = page.getByTestId('filter-in_progress');
+  await expect(btn).toContainText('En cours');
+  await btn.click();
+  await expect(btn).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId('filter-all')).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.getByTestId('incoming-section')).toHaveCount(0);
+  await expect(orderCard(page, accepted.reference)).toBeVisible();
+  await expect(orderCard(page, waiting.reference)).toHaveCount(0);
+  for (const card of await page.getByTestId('order-card').all()) {
+    await expect(card).not.toHaveAttribute('data-status', 'new');
+  }
+  // Button count = number of in-progress orders on the board.
+  const shownCount = await page.getByTestId('order-card').count();
+  await expect(btn.locator('.tf-count')).toHaveText(String(shownCount));
+
+  // A new order still alerts and is counted on "All", without entering this view.
+  const later = await quickTakeaway(request, 'Arrivée C');
+  await expect(page.getByTestId('new-order-alert')).toContainText(later.reference);
+  await expect(orderCard(page, later.reference)).toHaveCount(0);
+  await expect(page.getByTestId('filter-all').locator('.tf-new')).toBeVisible();
+
+  // Kept after reload; "All" brings the incoming list back.
+  await page.reload();
+  await expect(page.getByTestId('filter-in_progress')).toHaveAttribute('aria-pressed', 'true');
+  await page.getByTestId('filter-all').click();
+  await expect(page.getByTestId('incoming-section')).toBeVisible();
+  await expect(orderCard(page, waiting.reference)).toBeVisible();
+});
