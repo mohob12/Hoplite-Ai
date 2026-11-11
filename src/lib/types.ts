@@ -133,6 +133,7 @@ export interface PublicOrder {
   reference: string;
   order_type: OrderType;
   status: OrderStatus;
+  status_changed_at?: string;
   customer_name: string;
   customer_phone: string | null;
   table_number: string | null;

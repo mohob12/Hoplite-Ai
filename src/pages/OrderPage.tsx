@@ -4,9 +4,10 @@ import { supabase } from '../lib/supabase';
 import { useI18n } from '../lib/i18n';
 import { useSettings } from '../lib/settings';
 import { formatDA, formatDateTime, loc } from '../lib/format';
+import OrderTracker from '../components/OrderTracker';
 import type { PublicOrder } from '../lib/types';
 
-const REFRESH_MS = 15_000;
+const REFRESH_MS = 8_000;
 
 export default function OrderPage() {
   const { reference = '' } = useParams();
@@ -37,10 +38,16 @@ export default function OrderPage() {
 
   useEffect(() => {
     void load();
-    // Customers have no realtime access to orders; a light poll keeps status current.
+  }, [load]);
+
+  // Customers have no realtime access to orders; a light poll keeps the tracker current
+  // until the order reaches a final state.
+  const final = order ? ['completed', 'cancelled', 'rejected'].includes(order.status) : false;
+  useEffect(() => {
+    if (final) return;
     const id = setInterval(() => void load(), REFRESH_MS);
     return () => clearInterval(id);
-  }, [load]);
+  }, [load, final]);
 
   if (state !== 'ok' || !order) {
     return (
@@ -64,7 +71,6 @@ export default function OrderPage() {
 
   const isDelivery = order.order_type === 'delivery';
   const pending = order.delivery_fee_status === 'pending';
-  const closed = ['cancelled', 'rejected'].includes(order.status);
 
   return (
     <div className="page page-narrow stack" style={{ gap: 18 }} data-testid="order-confirmation">
@@ -80,12 +86,14 @@ export default function OrderPage() {
             {order.reference}
           </div>
         </div>
-        <div style={{ marginTop: 10 }}>
-          <span className={`badge ${closed ? 'badge-red' : order.status === 'new' ? 'badge-yellow' : 'badge-dark'}`} data-testid="order-status">
-            {t('conf.status')}: {t(`status.${order.status}`)}
-          </span>
-        </div>
       </div>
+
+      <OrderTracker
+        type={order.order_type}
+        status={order.status}
+        since={order.status_changed_at}
+        feeStatus={order.delivery_fee_status}
+      />
 
       <section className="card card-pad stack">
         <dl className="kv">
@@ -96,7 +104,11 @@ export default function OrderPage() {
           {order.table_number && (
             <>
               <dt>{t('conf.table')}</dt>
-              <dd className="num">{order.table_number}</dd>
+              <dd>
+                <span className="table-badge num" data-testid="table-badge">
+                  {order.table_number}
+                </span>
+              </dd>
             </>
           )}
           {order.customer_phone && (
