@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useI18n } from '../lib/i18n';
 import { formatDA, loc } from '../lib/format';
@@ -40,6 +40,21 @@ export default function MenuPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // The tab bar is transparent over the page pattern and only gets a backdrop once stuck.
+  const tabsSentinel = useRef<HTMLDivElement>(null);
+  const [tabsStuck, setTabsStuck] = useState(false);
+  const hasTabs = state === 'ok';
+  useEffect(() => {
+    const el = tabsSentinel.current;
+    if (!el) return;
+    const headerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 64;
+    const io = new IntersectionObserver(([e]) => setTabsStuck(!e.isIntersecting && e.boundingClientRect.top < headerH + 1), {
+      rootMargin: `-${headerH + 1}px 0px 0px 0px`,
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hasTabs]);
 
   const sections = useMemo(
     () =>
@@ -85,8 +100,9 @@ export default function MenuPage() {
       )}
       {state === 'ok' && sections.length === 0 && <p className="muted">{t('menu.empty')}</p>}
 
+      {sections.length > 0 && <div ref={tabsSentinel} aria-hidden="true" />}
       {sections.length > 0 && (
-        <nav className="cat-tabs" aria-label={t('menu.title')}>
+        <nav className={`cat-tabs ${tabsStuck ? 'stuck' : ''}`} aria-label={t('menu.title')}>
           {sections.map(({ cat }) => (
             <button key={cat.id} className={`cat-tab ${activeCat === cat.id ? 'active' : ''}`} onClick={() => jump(cat.id)}>
               {loc(cat, 'name', locale)}

@@ -33,6 +33,14 @@ body {
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
+/* Decorative geometric pattern on a fixed layer, so it stays still while content scrolls
+   (background-attachment: fixed is ignored on iOS). */
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    url('./assets/pattern.svg') center top / 96px 96px repeat,
+    linear-gradient(180deg, #fbf7ee 0%, var(--beige) 100%);
+}
 img { max-width: 100%; display: block; }
 a { color: inherit; }
 button, input, select, textarea { font: inherit; color: inherit; }
@@ -136,10 +144,16 @@ p { margin: 0; }
 
 /* ---------- Menu ---------- */
 .cat-tabs {
-  position: sticky; top: var(--header-h); z-index: 30; background: var(--beige);
+  position: sticky; top: var(--header-h); z-index: 30;
+  transition: background 0.2s, box-shadow 0.2s;
   display: flex; gap: 8px; overflow-x: auto; padding: 12px 0; scrollbar-width: none;
 }
 .cat-tabs::-webkit-scrollbar { display: none; }
+/* Full-bleed backdrop while stuck (shadow spreads it to the viewport edges, clip-path trims it vertically). */
+.cat-tabs.stuck {
+  background: rgba(246, 239, 227, 0.97); box-shadow: 0 0 0 100vmax rgba(246, 239, 227, 0.97);
+  clip-path: inset(0 -100vmax -1px); border-bottom: 1px solid var(--line);
+}
 .cat-tab {
   flex: none; padding: 8px 16px; border-radius: 999px; border: 1.5px solid var(--line);
   background: var(--white); font-weight: 700; cursor: pointer;
