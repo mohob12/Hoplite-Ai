@@ -51,4 +51,15 @@ test('live orders can be filtered by order type', async ({ page, request, contex
 
   await page.getByTestId('filter-all').click();
   for (const o of [dine, take, deliv, other]) await expect(orderCard(page, o.reference)).toBeVisible();
+
+  // Oldest first: cards appear in the order the orders were placed.
+  const refs = await page.getByTestId('incoming-orders').getByTestId('order-card').evaluateAll((els) =>
+    els.map((e) => Number((e.getAttribute('data-reference') ?? '').replace('MK-', ''))),
+  );
+  expect(refs.length).toBeGreaterThanOrEqual(4);
+  expect(refs).toEqual([...refs].sort((a, b) => a - b));
+  const pos = (r: string) => refs.indexOf(Number(r.replace('MK-', '')));
+  expect(pos(dine.reference)).toBeLessThan(pos(take.reference));
+  expect(pos(take.reference)).toBeLessThan(pos(deliv.reference));
+  expect(pos(deliv.reference)).toBeLessThan(pos(other.reference));
 });

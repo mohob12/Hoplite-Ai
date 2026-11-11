@@ -34,11 +34,12 @@ export default function Dashboard() {
     const list = f === 'all' ? open : open.filter((o) => o.order_type === f);
     return { total: list.length, fresh: list.filter((o) => o.status === 'new').length };
   };
-  const shown = filter === 'all' ? open : open.filter((o) => o.order_type === filter);
+  // First come, first served: oldest order at the top, newest at the bottom.
+  const shown = (filter === 'all' ? open : open.filter((o) => o.order_type === filter))
+    .slice()
+    .sort((a, b) => a.created_at.localeCompare(b.created_at) || a.order_number - b.order_number);
   const incoming = shown.filter((o) => o.status === 'new');
-  const active = shown
-    .filter((o) => o.status !== 'new')
-    .sort((a, b) => a.created_at.localeCompare(b.created_at));
+  const active = shown.filter((o) => o.status !== 'new');
 
   const stats: { key: keyof typeof counts; label: string; cls?: string }[] = [
     { key: 'new', label: t('dash.new'), cls: counts.new > 0 ? 'hot' : '' },
