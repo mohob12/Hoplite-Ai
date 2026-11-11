@@ -65,8 +65,12 @@ pnpm test:e2e                # Playwright on desktop, tablet and mobile viewport
    — this also creates the Mac Kiffan menu (migration `20261111000003_mac_kiffan_menu.sql`, imported from
    `Menu_MC_Kiffan_Organise.xlsx`). Do **not** load `seed.sql` in production: it only holds placeholder contact details and sample reviews.
 2. In Supabase Auth settings, disable public sign-ups; create staff accounts with `scripts/create-admin.mjs`.
-3. Build with `VITE_SUPABASE_URL=https://<ref>.supabase.co` and `VITE_SUPABASE_ANON_KEY=<anon key>`:
-   `pnpm build`, and host `dist/` on any static host with SPA fallback to `index.html`.
+3. **Netlify** (config in `netlify.toml`): *Add new site → Import an existing project → GitHub* → this repository and its
+   default branch. Before the first deploy, add `VITE_SUPABASE_URL` (`https://<ref>.supabase.co`) and
+   `VITE_SUPABASE_ANON_KEY` (Supabase → Project Settings → API keys, the public anon key) under
+   *Site configuration → Environment variables*. The build refuses to run on Netlify without them.
+   Every push to the branch redeploys automatically; changing an env var requires *Deploys → Trigger deploy*.
+   Any other static host works too: `pnpm build`, serve `dist/` with SPA fallback to `index.html`.
 4. In the admin: add dish photos, the restaurant phone/address/hours (`/admin/settings`),
    and verify any pending prices.
 
