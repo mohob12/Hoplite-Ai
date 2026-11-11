@@ -53,7 +53,7 @@ test('restaurant settings: disabling delivery reaches the storefront', async ({ 
     await shop.goto('/');
     await shop.locator('[data-testid=dish][data-name="Panini"] [data-testid=dish-open]').click();
     await shop.getByTestId('add-to-cart').click();
-    await shop.getByTestId('open-cart').click();
+    await shop.getByTestId('cart-popup-checkout').click();
     await expect(shop.getByTestId('type-delivery')).toBeDisabled();
     await shop.close();
   } finally {

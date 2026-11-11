@@ -25,12 +25,12 @@ export default defineConfig({
     {
       name: 'tablet',
       use: { ...devices['Desktop Chrome'], viewport: { width: 820, height: 1180 }, hasTouch: true },
-      testMatch: /customer\.spec/,
+      testMatch: /(customer|cart-popup)\.spec/,
     },
     {
       name: 'mobile',
       use: { ...devices['Pixel 7'] },
-      testMatch: /customer\.spec/,
+      testMatch: /(customer|cart-popup)\.spec/,
     },
   ],
 });

@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useI18n } from '../lib/i18n';
 import { formatDA, loc } from '../lib/format';
 import { useSettings } from '../lib/settings';
 import ProductModal, { orderableVariants, productImage } from '../components/ProductModal';
+import CartPopup from '../components/CartPopup';
 import type { Category, Product } from '../lib/types';
 
 export default function MenuPage() {
@@ -14,8 +15,7 @@ export default function MenuPage() {
   const [state, setState] = useState<'loading' | 'ok' | 'error'>('loading');
   const [selected, setSelected] = useState<Product | null>(null);
   const [activeCat, setActiveCat] = useState<string>('');
-  const [toast, setToast] = useState('');
-  const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [added, setAdded] = useState<{ key: string; name: string } | null>(null);
 
   const load = useCallback(async () => {
     setState('loading');
@@ -53,11 +53,7 @@ export default function MenuPage() {
     [categories, products],
   );
 
-  const showToast = (msg: string) => {
-    setToast(msg);
-    clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(''), 2200);
-  };
+  const closePopup = useCallback(() => setAdded(null), []);
 
   const jump = (id: string) => {
     setActiveCat(id);
@@ -147,18 +143,14 @@ export default function MenuPage() {
         <ProductModal
           product={selected}
           onClose={() => setSelected(null)}
-          onAdded={() => {
+          onAdded={(key, name) => {
             setSelected(null);
-            showToast(t('pm.added'));
+            setAdded({ key, name });
           }}
         />
       )}
 
-      {toast && (
-        <div className="toast-wrap" aria-live="polite">
-          <div className="toast">✓ {toast}</div>
-        </div>
-      )}
+      {added && <CartPopup addedKey={added.key} addedName={added.name} onClose={closePopup} />}
     </div>
   );
 }

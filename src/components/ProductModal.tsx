@@ -23,7 +23,7 @@ export default function ProductModal({
 }: {
   product: Product;
   onClose: () => void;
-  onAdded: () => void;
+  onAdded: (lineKey: string, productName: string) => void;
 }) {
   const { t, locale } = useI18n();
   const { add } = useCart();
@@ -64,7 +64,7 @@ export default function ProductModal({
 
   function submit() {
     if (!variant) return;
-    add({
+    const key = add({
       productId: product.id,
       variantId: variant.id,
       product: { name_ar: product.name_ar, name_fr: product.name_fr, name_en: product.name_en },
@@ -74,7 +74,7 @@ export default function ProductModal({
       quantity: qty,
       image: img,
     });
-    onAdded();
+    onAdded(key, name);
   }
 
   return (

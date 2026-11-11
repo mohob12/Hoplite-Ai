@@ -53,7 +53,7 @@ export async function adminLogin(page: Page) {
   await page.goto('/admin/login');
   await page.locator('input[name=email]').fill(ADMIN_EMAIL);
   await page.locator('input[name=password]').fill(ADMIN_PASSWORD);
-  await page.locator('form button').click();
+  await page.locator('form button.btn-primary').click();
   await expect(page.getByTestId('connection-status')).toHaveAttribute('data-state', 'live', { timeout: 20_000 });
 }
 

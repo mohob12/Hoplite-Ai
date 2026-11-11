@@ -1,9 +1,10 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../lib/i18n';
-import { lineUnitTotal, useCart } from '../lib/cart';
+import { useCart } from '../lib/cart';
 import { useSettings } from '../lib/settings';
-import { errorKey, formatDA, loc } from '../lib/format';
+import { errorKey, formatDA } from '../lib/format';
+import CartLines from './CartLines';
 import { supabase } from '../lib/supabase';
 import type { OrderType } from '../lib/types';
 
@@ -147,33 +148,7 @@ export default function CartDrawer() {
             </p>
           ) : (
             <>
-              <div className="stack" style={{ gap: 8 }}>
-                {cart.lines.map((l) => (
-                  <div key={l.key} className="cart-line" data-testid="cart-line">
-                    {l.image && <img src={l.image} alt="" />}
-                    <div className="info">
-                      <div className="name">{loc(l.product, 'name', locale)}</div>
-                      {l.variant && <div className="meta">{loc(l.variant, 'name', locale)}</div>}
-                      {l.extras.length > 0 && <div className="meta">+ {l.extras.map((x) => loc(x, 'name', locale)).join('، ')}</div>}
-                      <div className="row" style={{ marginTop: 6 }}>
-                        <div className="qty">
-                          <button type="button" onClick={() => cart.setQuantity(l.key, l.quantity - 1)} aria-label="−">
-                            −
-                          </button>
-                          <span className="num">{l.quantity}</span>
-                          <button type="button" onClick={() => cart.setQuantity(l.key, l.quantity + 1)} aria-label="+">
-                            +
-                          </button>
-                        </div>
-                        <div className="spacer" />
-                        <strong className="num" data-testid="line-total">
-                          {formatDA(lineUnitTotal(l) * l.quantity, locale)}
-                        </strong>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <CartLines />
 
               <section>
                 <div className="section-title">{t('cart.orderType')}</div>

@@ -114,7 +114,6 @@ p { margin: 0; }
 .site-nav { display: flex; gap: 4px; }
 .site-nav a { padding: 8px 12px; border-radius: 999px; text-decoration: none; font-weight: 600; color: var(--muted); }
 .site-nav a.active, .site-nav a:hover { color: var(--black); background: rgba(27, 27, 27, 0.05); }
-.lang-select { min-height: 38px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--white); font-weight: 600; }
 .cart-btn { position: relative; }
 .cart-count {
   position: absolute; top: -6px; inset-inline-end: -6px; min-width: 22px; height: 22px; padding: 0 6px;
@@ -491,3 +490,71 @@ input[type='range'] { accent-color: var(--red); width: 100%; }
 .kv dt, .kv dd { align-self: center; }
 /* LTR-isolated numbers (dates, phones) still align with the rest of the column in RTL. */
 [dir='rtl'] .kv dd.num { text-align: right; }
+
+/* ---------- Language switcher ---------- */
+.lang { position: relative; }
+.lang-btn {
+  display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 10px 0 12px;
+  border-radius: 999px; border: 1.5px solid var(--line); background: var(--white); color: var(--black);
+  font-weight: 700; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s;
+}
+[dir='rtl'] .lang-btn { padding: 0 12px 0 10px; }
+.lang-btn:hover, .lang.open .lang-btn { border-color: var(--black); }
+.lang-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(242, 183, 5, 0.6); }
+.lang-globe { color: var(--red); flex: none; }
+.lang-code {
+  display: none; min-width: 26px; height: 22px; padding: 0 6px; border-radius: 6px;
+  background: var(--black); color: var(--white); font-size: 0.72rem; letter-spacing: 0.5px; place-items: center;
+}
+.lang-chev { flex: none; opacity: 0.6; transition: transform 0.2s; }
+.lang.open .lang-chev { transform: rotate(180deg); }
+.lang-menu {
+  position: absolute; top: calc(100% + 8px); inset-inline-end: 0; z-index: 70; min-width: 200px; padding: 6px;
+  background: var(--white); border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: 0 14px 40px rgba(27, 27, 27, 0.16); animation: langIn 0.16s ease;
+}
+@keyframes langIn { from { opacity: 0; transform: translateY(-6px); } }
+.lang-item {
+  width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px; border: 0; border-radius: 10px;
+  background: transparent; cursor: pointer; font-weight: 600; text-align: start;
+}
+.lang-item:hover, .lang-item:focus-visible { background: var(--beige); outline: none; }
+.lang-item.active { background: var(--beige); }
+.lang-badge {
+  width: 32px; height: 32px; flex: none; border-radius: 999px; display: grid; place-items: center;
+  background: var(--beige-deep); color: var(--black); font-weight: 800; font-size: 0.82rem;
+}
+.lang-badge.ar { font-size: 1.05rem; }
+.lang-item.active .lang-badge { background: var(--yellow); }
+.lang-name { flex: 1; }
+.lang-check { color: var(--red); flex: none; }
+@media (max-width: 640px) {
+  .lang-current { display: none; }
+  .lang-code { display: inline-grid; }
+  .lang-btn { padding: 0 8px; gap: 6px; }
+}
+
+/* ---------- Cart popup (after adding a dish) ---------- */
+.cart-popup { display: flex; flex-direction: column; width: min(480px, 100% - 24px); max-height: min(720px, calc(100dvh - 24px)); overflow: hidden; }
+.cp-head { display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+.cp-head h2 { font-size: 1.15rem; font-weight: 800; }
+.cp-added { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cp-check {
+  width: 38px; height: 38px; flex: none; border-radius: 999px; display: grid; place-items: center;
+  background: var(--yellow); color: var(--black); font-weight: 800; animation: pop 0.25s ease;
+}
+.cp-body { flex: 1; overflow: auto; padding: 14px 18px; background: var(--beige); }
+.cp-count { margin-bottom: 8px; font-weight: 600; }
+.cp-summary { padding: 12px 18px; border-top: 1px solid var(--line); }
+.cp-fee { color: var(--muted); font-size: 0.85rem; text-align: end; }
+.cp-foot { display: flex; gap: 10px; padding: 12px 18px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--white); }
+.cp-foot .btn { flex: 1; min-height: 48px; white-space: normal; line-height: 1.2; }
+@media (max-width: 420px) { .cp-foot { flex-direction: column-reverse; } }
+
+.line-remove {
+  width: 34px; height: 34px; flex: none; border-radius: 999px; border: 1px solid transparent;
+  background: transparent; color: var(--muted); display: grid; place-items: center; cursor: pointer;
+}
+.line-remove:hover, .line-remove:focus-visible { color: var(--red); border-color: var(--red); background: var(--white); outline: none; }
+.cart-line.just-added { border-color: var(--yellow); box-shadow: inset 0 0 0 1.5px var(--yellow); }
+.qty button:disabled { opacity: 0.35; cursor: not-allowed; }

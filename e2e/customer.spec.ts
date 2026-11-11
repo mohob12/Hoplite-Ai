@@ -33,20 +33,44 @@ test.describe('customer ordering', () => {
     await add.click();
     await expect(modal).toBeHidden();
 
+    // The cart popup opens right after adding, listing the whole cart.
+    const popup = page.getByTestId('cart-popup');
+    await expect(popup).toBeVisible();
+    await expect(popup.getByTestId('cart-line')).toHaveCount(1);
+    await expect(page.getByTestId('cart-popup-subtotal')).toHaveText(/1\s?960 DA/);
+    await expect(page.getByTestId('cart-popup-fee')).toBeVisible();
+    await page.getByTestId('cart-popup-continue').click();
+    await expect(popup).toBeHidden();
+
     // Single-variant product: no choice needed.
     await page.locator('[data-testid=dish][data-name="Cheese Burger"] [data-testid=dish-open]').click();
     await expect(page.getByTestId('variant-option')).toHaveCount(0);
     await expect(page.getByTestId('modal-total')).toHaveText('450 DA');
     await page.getByTestId('add-to-cart').click();
 
+    // Quantities can be changed in the popup; totals follow.
+    await expect(popup.getByTestId('cart-line')).toHaveCount(2);
+    const burgerLine = popup.getByTestId('cart-line').filter({ hasText: 'Cheese Burger' });
+    await expect(burgerLine).toHaveClass(/just-added/);
+    await burgerLine.getByTestId('line-inc').click();
+    await expect(burgerLine.getByTestId('line-qty')).toHaveText('2');
+    await expect(page.getByTestId('cart-popup-subtotal')).toHaveText(/2\s?860 DA/);
+    await burgerLine.getByTestId('line-dec').click();
+    await expect(page.getByTestId('cart-popup-subtotal')).toHaveText(/2\s?410 DA/);
+    await page.keyboard.press('Escape');
+    await expect(popup).toBeHidden();
+
     // Third product with variant.
     await page.locator('[data-testid=dish][data-name="Tacos"] [data-testid=dish-open]').click();
     await page.getByTestId('variant-option').filter({ hasText: 'Double' }).click();
     await page.getByTestId('add-to-cart').click();
+    await expect(page.getByTestId('cart-popup-subtotal')).toHaveText(/3\s?110 DA/);
 
     await expect(page.getByTestId('cart-count')).toHaveText('4');
-    await page.getByTestId('open-cart').click();
+    await page.getByTestId('cart-popup-checkout').click();
+    await expect(popup).toBeHidden();
     const drawer = page.getByTestId('cart-drawer');
+    await expect(drawer).toBeVisible();
     await expect(drawer.getByTestId('cart-line')).toHaveCount(3);
     // 2×980 + 450 + 700 = 3110
     await expect(page.getByTestId('cart-subtotal')).toHaveText(/3\s?110 DA/);
@@ -100,7 +124,7 @@ test.describe('customer ordering', () => {
     await page.goto('/');
     await page.locator('[data-testid=dish][data-name="Burger Classique"] [data-testid=dish-open]').click();
     await page.getByTestId('add-to-cart').click();
-    await page.getByTestId('open-cart').click();
+    await page.getByTestId('cart-popup-checkout').click();
     await page.getByTestId('type-delivery').click();
     await page.getByTestId('f-name').fill('Nadia');
     await page.getByTestId('f-phone').fill('0661 22 33 44');
@@ -118,7 +142,7 @@ test.describe('customer ordering', () => {
     await page.goto('/');
     await page.locator('[data-testid=dish][data-name="Panini"] [data-testid=dish-open]').click();
     await page.getByTestId('add-to-cart').click();
-    await page.getByTestId('open-cart').click();
+    await page.getByTestId('cart-popup-checkout').click();
     await page.getByTestId('type-takeaway').click();
     await page.getByTestId('f-name').fill('Sofiane');
     await page.getByTestId('f-phone').fill('0770 00 00 01');
@@ -144,7 +168,7 @@ test.describe('languages & direction', () => {
       await expect(page.locator('html')).toHaveAttribute('lang', locale);
       await page.locator('[data-testid=dish][data-name="Panini"] [data-testid=dish-open]').click();
       await page.getByTestId('add-to-cart').click();
-      await page.getByTestId('open-cart').click();
+      await page.getByTestId('cart-popup-checkout').click();
       await expect(page.getByTestId('type-takeaway')).toContainText(takeaway);
       await expect(page.getByTestId('type-dine_in')).toContainText(dine);
       // Layout must not overflow horizontally in either direction.

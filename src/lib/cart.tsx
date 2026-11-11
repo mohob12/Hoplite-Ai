@@ -23,7 +23,7 @@ interface CartValue {
   lines: CartLine[];
   count: number;
   subtotal: number;
-  add: (line: Omit<CartLine, 'key'>) => void;
+  add: (line: Omit<CartLine, 'key'>) => string;
   setQuantity: (key: string, qty: number) => void;
   remove: (key: string) => void;
   clear: () => void;
@@ -69,6 +69,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, { ...line, key }];
     });
+    return key;
   }, []);
 
   const setQuantity = useCallback((key: string, qty: number) => {
