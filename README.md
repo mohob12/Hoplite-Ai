@@ -74,7 +74,8 @@ Illustrative food photos in `public/images/demo/` are from Unsplash (free licens
 replace them with the restaurant's own photos from `/admin/menu`. Dishes without a photo show a branded placeholder.
 
 Dishes that had no photo use free-licensed images from Wikimedia Commons (`public/images/menu/`); authors and licenses are listed
-in `src/data/photoCredits.json` and on the public `/credits` page, which the CC BY / BY-SA licenses require — keep it if you keep those photos.
+in `src/data/photoCredits.json` and on the `/credits` page (no longer linked from the footer at the owner’s request). The CC BY / BY-SA
+licenses require reasonable attribution, so replace those photos with the restaurant’s own before removing the page.
 
 **Menu import notes:** prices written as "A DA / B DA" without a stated meaning, and price ranges such as "550-600 DA",
 are imported as *pending verification* (hidden from customers) — 20 products, listed at the top of `/admin/menu`.

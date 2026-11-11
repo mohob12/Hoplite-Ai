@@ -8,9 +8,9 @@ update public.restaurant_settings set
   address_ar = 'المحمدية، الجزائر العاصمة',
   address_fr = 'Mohammadia, Alger',
   address_en = 'Mohammadia, Algiers',
-  opening_hours_ar = 'كل يوم: 11:00 – 23:00',
-  opening_hours_fr = 'Tous les jours : 11h00 – 23h00',
-  opening_hours_en = 'Every day: 11:00 – 23:00'
+  opening_hours_ar = 'كل يوم: 11:00 – منتصف الليل',
+  opening_hours_fr = 'Tous les jours : 11h00 – minuit',
+  opening_hours_en = 'Every day: 11:00 – midnight'
 where id = 1;
 
 insert into public.customer_reviews (customer_name, rating, comment, is_approved) values

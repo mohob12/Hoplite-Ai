@@ -78,6 +78,11 @@ export interface RestaurantSettings {
   opening_hours_ar: string;
   opening_hours_fr: string;
   opening_hours_en: string;
+  opens_at: string | null;
+  closes_at: string | null;
+  facebook_url: string;
+  instagram_url: string;
+  tiktok_url: string;
   ordering_enabled: boolean;
   delivery_enabled: boolean;
 }

@@ -2,6 +2,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 import Logo from './Logo';
 import LanguageSelect from './LanguageSelect';
 import CartDrawer from './CartDrawer';
+import SocialLinks from './SocialLinks';
 import { useI18n } from '../lib/i18n';
 import { useCart } from '../lib/cart';
 import { useSettings } from '../lib/settings';
@@ -47,12 +48,12 @@ export default function PublicLayout() {
         <Outlet />
       </main>
 
-      <footer className="site-footer">
+      <footer className="site-footer" data-testid="site-footer">
         <div className="container footer-grid">
-          <div className="stack">
+          <div className="footer-brand stack">
             <Logo />
-            <p className="muted small">{t('app.tagline')}</p>
-            <nav className="row wrap small mobile-only">
+            <p className="footer-tagline">{t('app.tagline')}</p>
+            <nav className="row wrap small mobile-only footer-nav">
               <NavLink to="/reviews">{t('nav.reviews')}</NavLink>
               <NavLink to="/careers">{t('nav.careers')}</NavLink>
             </nav>
@@ -69,17 +70,24 @@ export default function PublicLayout() {
               </div>
               <div>
                 <h4>{t('footer.phone')}</h4>
-                <a href={`tel:${settings.phone.replace(/\s/g, '')}`} className="num">
+                <a href={`tel:${settings.phone.replace(/\s/g, '')}`} className="num footer-phone">
                   {settings.phone}
                 </a>
               </div>
+              {(settings.facebook_url || settings.instagram_url || settings.tiktok_url) && (
+                <div>
+                  <h4>{t('footer.follow')}</h4>
+                  <SocialLinks
+                    links={{
+                      facebook: settings.facebook_url,
+                      instagram: settings.instagram_url,
+                      tiktok: settings.tiktok_url,
+                    }}
+                  />
+                </div>
+              )}
             </>
           )}
-        </div>
-        <div className="container footer-credits small muted">
-          <NavLink to="/credits" data-testid="credits-link">
-            {t('footer.credits')}
-          </NavLink>
         </div>
       </footer>
 

@@ -20,7 +20,9 @@ test('every dish shows a photo and the credits page lists the licensed ones', as
     )
     .toBe(0);
 
-  await page.getByTestId('credits-link').click();
+  // No footer link any more (owner's request); the page stays reachable by URL.
+  await expect(page.getByTestId('site-footer')).not.toContainText(/crédits/i);
+  await page.goto('/credits');
   await expect(page).toHaveURL(/\/credits$/);
   await expect(page.getByTestId('credits-list').locator('li')).toHaveCount(45);
   await expect(page.getByTestId('credits-list')).toContainText('CC BY');
