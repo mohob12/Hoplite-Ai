@@ -165,9 +165,9 @@ export function OrdersFeedProvider({ children }: { children: ReactNode }) {
     let disposed = false;
     let channel: RealtimeChannel | null = null;
     let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    let warmupTimer: ReturnType<typeof setTimeout> | undefined;
     let pollTimer: ReturnType<typeof setInterval> | undefined;
     let attempt = 0;
-    let wasDown = false;
 
     const startPolling = () => {
       if (pollTimer) return;
@@ -199,11 +199,13 @@ export function OrdersFeedProvider({ children }: { children: ReactNode }) {
             attempt = 0;
             setConnection('live');
             stopPolling();
-            // Anything that arrived while we were disconnected.
-            if (wasDown) void catchUp();
-            wasDown = false;
+            // Catch up on anything missed while disconnected, and again shortly after:
+            // an idle realtime server starts replication lazily, so changes made in the
+            // first seconds after SUBSCRIBED may never be pushed.
+            void catchUp();
+            clearTimeout(warmupTimer);
+            warmupTimer = setTimeout(() => void catchUp(), 4000);
           } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-            wasDown = true;
             setConnection(navigator.onLine ? 'polling' : 'offline');
             startPolling();
             clearTimeout(retryTimer);
@@ -240,6 +242,7 @@ export function OrdersFeedProvider({ children }: { children: ReactNode }) {
     return () => {
       disposed = true;
       clearTimeout(retryTimer);
+      clearTimeout(warmupTimer);
       stopPolling();
       clearInterval(safety);
       window.removeEventListener('online', onOnline);

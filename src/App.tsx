@@ -5,6 +5,7 @@ import MenuPage from './pages/MenuPage';
 import OrderPage from './pages/OrderPage';
 import ReviewsPage from './pages/ReviewsPage';
 import CareersPage from './pages/CareersPage';
+import CreditsPage from './pages/CreditsPage';
 
 // Admin code is split out so customers only download the storefront.
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="order/:reference" element={<OrderPage />} />
         <Route path="reviews" element={<ReviewsPage />} />
         <Route path="careers" element={<CareersPage />} />
+        <Route path="credits" element={<CreditsPage />} />
       </Route>
       <Route path="admin/login" element={<L><AdminLogin /></L>} />
       <Route

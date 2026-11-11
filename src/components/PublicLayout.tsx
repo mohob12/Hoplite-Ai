@@ -76,6 +76,11 @@ export default function PublicLayout() {
             </>
           )}
         </div>
+        <div className="container footer-credits small muted">
+          <NavLink to="/credits" data-testid="credits-link">
+            {t('footer.credits')}
+          </NavLink>
+        </div>
       </footer>
 
       <CartDrawer />

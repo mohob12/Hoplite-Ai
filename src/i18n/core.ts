@@ -164,6 +164,10 @@ export const ar = {
   'footer.hours': 'أوقات العمل',
   'footer.address': 'العنوان',
   'footer.phone': 'الهاتف',
+  'footer.credits': 'مصادر الصور',
+  'credits.title': 'مصادر الصور',
+  'credits.intro': 'بعض صور الأطباق مأخوذة من ويكيميديا كومنز بتراخيص حرة. نشكر أصحابها ونذكرهم هنا كما تشترط التراخيص. الصور توضيحية وقد يختلف التقديم في المطعم.',
+  'credits.other': 'باقي الصور من Unsplash (رخصة Unsplash).',
 
   // Admin — shell & dashboard
   'admin.login': 'دخول الإدارة',
@@ -422,6 +426,10 @@ export const fr: Record<CoreKey, string> = {
   'footer.hours': 'Horaires',
   'footer.address': 'Adresse',
   'footer.phone': 'Téléphone',
+  'footer.credits': 'Crédits photos',
+  'credits.title': 'Crédits photos',
+  'credits.intro': 'Certaines photos de plats proviennent de Wikimedia Commons sous licences libres. Nous remercions leurs auteurs, cités ici comme l’exigent les licences. Photos non contractuelles.',
+  'credits.other': 'Les autres photos proviennent d’Unsplash (licence Unsplash).',
 
   'admin.login': 'Connexion administration',
   'admin.email': 'E-mail',
@@ -677,6 +685,10 @@ export const en: Record<CoreKey, string> = {
   'footer.hours': 'Opening hours',
   'footer.address': 'Address',
   'footer.phone': 'Phone',
+  'footer.credits': 'Photo credits',
+  'credits.title': 'Photo credits',
+  'credits.intro': 'Some dish photos come from Wikimedia Commons under free licenses. We thank their authors, credited here as the licenses require. Photos are illustrative; actual presentation may differ.',
+  'credits.other': 'Other photos are from Unsplash (Unsplash License).',
 
   'admin.login': 'Admin sign in',
   'admin.email': 'Email',

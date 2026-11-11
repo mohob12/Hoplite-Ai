@@ -1,5 +1,5 @@
 begin;
-select plan(9);
+select plan(10);
 
 -- Checks on the imported Mac Kiffan menu (migration 20261111000003).
 select is((select count(*)::int from public.categories), 12, '12 categories');
@@ -43,6 +43,11 @@ select is(
   (select count(distinct p.id)::int from public.products p
     where exists (select 1 from public.product_variants v where v.product_id = p.id and v.verification = 'pending')),
   20, '20 products await price confirmation');
+
+select is(
+  (select count(*)::int from public.products p
+    where not exists (select 1 from public.product_images i where i.product_id = p.id)),
+  0, 'every product has a photo');
 
 select * from finish();
 rollback;
